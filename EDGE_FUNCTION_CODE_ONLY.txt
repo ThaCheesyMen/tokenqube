@@ -1,0 +1,158 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const STEAM_API_KEY = Deno.env.get('STEAM_API_KEY') || ''
+
+interface SteamGame {
+  appid: number
+  name: string
+  playtime_forever: number
+}
+
+interface SteamGamesResponse {
+  response: {
+    game_count: number
+    games: SteamGame[]
+  }
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info',
+        'Access-Control-Max-Age': '86400',
+      },
+    })
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 })
+  }
+
+  try {
+    // Get auth header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No auth header' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      )
+    }
+
+    const { gamingAccountId, steamId64 } = await req.json()
+
+    if (!gamingAccountId || !steamId64) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameters' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      )
+    }
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Get gaming account info
+    const { data: account, error: accountError } = await supabase
+      .from('gaming_accounts')
+      .select('user_id, platform')
+      .eq('id', gamingAccountId)
+      .single()
+
+    if (accountError || !account) {
+      return new Response(
+        JSON.stringify({ error: 'Gaming account not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      )
+    }
+
+    // Fetch games from Steam API
+    const steamApiUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId64}&format=json&include_appinfo=true`
+    
+    console.log('Fetching Steam games from:', steamApiUrl)
+    const steamResponse = await fetch(steamApiUrl)
+    
+    if (!steamResponse.ok) {
+      console.error('Steam API error:', await steamResponse.text())
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch Steam data' }),
+        { status: steamResponse.status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      )
+    }
+
+    const steamData: SteamGamesResponse = await steamResponse.json()
+    const games = steamData.response?.games || []
+
+    console.log(`Found ${games.length} games from Steam`)
+
+    // Process and insert games
+    const gamesToInsert = games
+      .filter(game => game.playtime_forever > 60) // Only games with more than 1 hour
+      .map(game => ({
+        user_id: account.user_id,
+        gaming_account_id: gamingAccountId,
+        game_name: game.name,
+        game_id: game.appid.toString(),
+        platform: 'steam',
+        hours_played: Math.round((game.playtime_forever / 60) * 10) / 10,
+        is_owned: true,
+        last_sync: new Date().toISOString(),
+      }))
+
+    if (gamesToInsert.length > 0) {
+      console.log(`Inserting ${gamesToInsert.length} games`)
+      // Insert games (with conflict handling)
+      const { error: insertError } = await supabase
+        .from('user_games')
+        .upsert(gamesToInsert, {
+          onConflict: 'user_id,gaming_account_id,game_id',
+        })
+
+      if (insertError) {
+        console.error('Error inserting games:', insertError)
+      }
+    }
+
+    // Calculate and update total playtime
+    const totalHours = games.reduce((sum, game) => sum + (game.playtime_forever / 60), 0)
+
+    const { error: updateError } = await supabase
+      .from('gaming_accounts')
+      .update({ 
+        total_playtime_hours: Math.round(totalHours),
+        last_sync: new Date().toISOString(),
+      })
+      .eq('id', gamingAccountId)
+
+    if (updateError) {
+      console.error('Error updating playtime:', updateError)
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        gamesAdded: gamesToInsert.length,
+        totalHours: Math.round(totalHours),
+      }),
+      { 
+        status: 200, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Error in sync-steam-games:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+    )
+  }
+})

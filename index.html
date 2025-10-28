@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Primary Meta Tags -->
+    <title>TokenQuest - Gaming Rewards Platform</title>
+    <meta name="title" content="TokenQuest - Gaming Rewards Platform" />
+    <meta name="description" content="Earn tokens while gaming, compete on leaderboards, join tournaments, and trade in the marketplace. Connect your gaming accounts and start earning!" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#8B5CF6" />
+    <meta name="msapplication-TileColor" content="#8B5CF6" />
+    
+    <!-- Apple Touch Icon & Meta Tags -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="TokenQuest" />
+    
+    <!-- Icons for various sizes -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileImage" content="/icon-144x144.png" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tokenquest.app/" />
+    <meta property="og:title" content="TokenQuest - Gaming Rewards Platform" />
+    <meta property="og:description" content="Earn tokens while gaming, compete on leaderboards, join tournaments, and trade in the marketplace." />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://tokenquest.app/" />
+    <meta property="twitter:title" content="TokenQuest - Gaming Rewards Platform" />
+    <meta property="twitter:description" content="Earn tokens while gaming, compete on leaderboards, join tournaments, and trade in the marketplace." />
+    <meta property="twitter:image" content="/og-image.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration (Production Only) -->
+    <script>
+      // Only register service worker in production (not localhost)
+      if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('✅ Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('❌ Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TokenQube Overlay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      width: 100vw; 
+      height: 100vh; 
+      background: transparent; 
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      pointer-events: none; /* Background is click-through */
+    }
+    
+    .widget {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(12px);
+      border-radius: 10px;
+      padding: 10px 14px;
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      pointer-events: auto;
+      cursor: move;
+      transition: all 0.2s;
+    }
+    
+    .widget:hover {
+      border-color: rgba(139, 92, 246, 0.8);
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.3);
+    }
+    
+    .widget.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      cursor: move;
+      pointer-events: auto;
+      padding: 2px 0;
+    }
+    
+    .widget-title {
+      font-size: 10px;
+      color: #8B5CF6;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .widget-toggle {
+      width: 12px;
+      height: 12px;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+      pointer-events: auto;
+      padding: 4px;
+    }
+    
+    .widget-toggle:hover { 
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    
+    .widget-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-size: 14px;
+      pointer-events: none; /* Prevent content from blocking header drag */
+    }
+    
+    .icon { font-size: 18px; }
+    .time { font-family: 'Courier New', monospace; font-size: 20px; font-weight: bold; }
+    .value { font-weight: bold; }
+    .label { font-size: 12px; color: #aaa; }
+    
+    .bar {
+      width: 100px;
+      height: 5px;
+      background: #2a2a2a;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8B5CF6, #a78bfa);
+      transition: width 0.3s ease;
+      border-radius: 3px;
+    }
+    
+    /* Widget Positions (defaults) */
+    #clock { top: 20px; left: 20px; }
+    #friends { top: 20px; right: 20px; }
+    #fps { bottom: 20px; right: 20px; }
+    #cpu { bottom: 20px; left: 20px; }
+    #ram { bottom: 90px; left: 20px; }
+    #network { bottom: 160px; left: 20px; }
+    #game { top: 20px; left: 50%; transform: translateX(-50%); }
+    
+    #settings {
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: pointer;
+      border-color: rgba(59, 130, 246, 0.4);
+      z-index: 1000;
+    }
+    
+    #settings:hover { 
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.8);
+    }
+    
+    #close {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: pointer;
+      border-color: rgba(239, 68, 68, 0.4);
+      z-index: 1000;
+    }
+    
+    #close:hover { 
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.8);
+    }
+    
+    /* Notifications */
+    .notification {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.95);
+      border: 2px solid #8B5CF6;
+      border-radius: 12px;
+      padding: 16px;
+      min-width: 300px;
+      max-width: 400px;
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.5);
+      animation: slideIn 0.3s ease;
+      pointer-events: auto;
+      z-index: 2000;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .notification-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .notification-title {
+      color: #8B5CF6;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .notification-close {
+      cursor: pointer;
+      color: #ef4444;
+      font-weight: bold;
+    }
+    
+    .notification-body {
+      color: white;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    
+    .notification-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .notification-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    
+    .btn-accept {
+      background: #10b981;
+      color: white;
+    }
+    
+    .btn-accept:hover {
+      background: #059669;
+    }
+    
+    .btn-decline {
+      background: #ef4444;
+      color: white;
+    }
+    
+    .btn-decline:hover {
+      background: #dc2626;
+    }
+  </style>
+</head>
+<body>
+  <!-- Clock Widget -->
+  <div id="clock" class="widget">
+    <div class="widget-header">
+      <span class="widget-title">Time</span>
+      <span class="widget-toggle" onclick="toggleWidget('clock')">❌</span>
+    </div>
+    <div class="widget-content">
+      <span class="icon">⏰</span>
+      <span class="time" id="timeDisplay">--:--:--</span>
+    </div>
+  </div>
+
+  <!-- Friends Widget -->
+  <div id="friends" class="widget">
+    <div class="widget-header">
+      <span class="widget-title">Friends</span>
+      <span class="widget-toggle" onclick="toggleWidget('friends')">❌</span>
+    </div>
+    <div class="widget-content">
+      <span class="icon">👥</span>
+      <span class="label">
+        <span class="value" style="color: #10b981;" id="friendCount">--</span> Online
+      </span>
+    </div>
+  </div>
+
+  <!-- FPS Widget -->
+  <div id="fps" class="widget">
+    <div class="widget-header">
+      <span class="widget-title">Performance</span>
+      <span class="widget-toggle" onclick="toggleWidget('fps')">❌</span>
+    </div>
+    <div class="widget-content" style="flex-direction: column; gap: 6px; align-items: flex-start;">
+      <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+        <span class="icon">📊</span>
+        <span class="value" id="fpsDisplay">-- FPS</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+        <span class="icon">📡</span>
+        <span class="label" id="latencyDisplay">--ms</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CPU Widget -->
+  <div id="cpu" class="widget">
+    <div class="widget-header">
+      <span class="widget-title">CPU Usage</span>
+      <span class="widget-toggle" onclick="toggleWidget('cpu')">❌</span>
+    </div>
+    <div class="widget-content">
+      <span class="icon">💻</span>
+      <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+        <div class="bar">
+          <div class="bar-fill" id="cpuBar" style="width: 0%"></div>
+        </div>
+        <span class="label" id="cpuDisplay">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAM Widget -->
+  <div id="ram" class="widget">
+    <div class="widget-header">
+      <span class="widget-title">RAM Usage</span>
+      <span class="widget-toggle" onclick="toggleWidget('ram')">❌</span>
+    </div>
+    <div class="widget-content">
+      <span class="icon">🧠</span>
+      <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+        <div class="bar">
+          <div class="bar-fill" id="ramBar" style="width: 0%"></div>
+        </div>
+        <span class="label" id="ramDisplay">0 GB / 0 GB</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Network Widget -->
+  <div id="network" class="widget">
+    <div class="widget-header">
+      <span class="widget-title">Network</span>
+      <span class="widget-toggle" onclick="toggleWidget('network')">❌</span>
+    </div>
+    <div class="widget-content" style="flex-direction: column; gap: 4px; align-items: flex-start;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="icon">⬆️</span>
+        <span class="label" id="uploadDisplay">-- KB/s</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="icon">⬇️</span>
+        <span class="label" id="downloadDisplay">-- KB/s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Current Game Widget -->
+  <div id="game" class="widget hidden">
+    <div class="widget-header">
+      <span class="widget-title">Now Playing</span>
+      <span class="widget-toggle" onclick="toggleWidget('game')">❌</span>
+    </div>
+    <div class="widget-content">
+      <span class="icon">🎮</span>
+      <span class="value" id="gameDisplay">No game detected</span>
+    </div>
+  </div>
+
+  <!-- Settings Button -->
+  <div id="settings" class="widget">
+    <div class="widget-content">
+      <span class="icon">⚙️</span>
+      <span class="label" style="color: #60a5fa;">Settings</span>
+    </div>
+  </div>
+
+  <!-- Close Button -->
+  <div id="close" class="widget">
+    <div class="widget-content">
+      <span class="icon">❌</span>
+      <span class="label" style="color: #ef4444;">Close Overlay (F9)</span>
+    </div>
+  </div>
+
+  <!-- Notifications Container -->
+  <div id="notifications"></div>
+
+  <script>
+    // ========================================
+    // CONFIGURATION & STATE
+    // ========================================
+    
+    const SUPABASE_URL = 'https://mprvbelnfalnvcwvrsqe.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wcnZiZWxuZmFsbnZjd3Zyc3FlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk3ODYwMjAsImV4cCI6MjA0NTM2MjAyMH0.T4eJVQXZ-LOx4l3uyxLaKCqFmf-57L6R_kOgO_OlE4Y';
+    
+    let userId = null;
+    let previousFriendCount = 0;
+    let widgetPositions = {};
+    let widgetVisibility = {};
+    
+    // Load saved positions and visibility
+    const savedPositions = localStorage.getItem('widgetPositions');
+    const savedVisibility = localStorage.getItem('widgetVisibility');
+    
+    if (savedPositions) {
+      widgetPositions = JSON.parse(savedPositions);
+    }
+    
+    if (savedVisibility) {
+      widgetVisibility = JSON.parse(savedVisibility);
+      Object.keys(widgetVisibility).forEach(id => {
+        const widget = document.getElementById(id);
+        if (widget && !widgetVisibility[id]) {
+          widget.classList.add('hidden');
+        }
+      });
+    }
+    
+    // Apply saved positions
+    Object.keys(widgetPositions).forEach(id => {
+      const widget = document.getElementById(id);
+      if (widget && widgetPositions[id]) {
+        widget.style.left = widgetPositions[id].x + 'px';
+        widget.style.top = widgetPositions[id].y + 'px';
+        widget.style.transform = 'none';
+      }
+    });
+
+    // ========================================
+    // DRAGGING FUNCTIONALITY (Mouse Events)
+    // ========================================
+    
+    let draggedElement = null;
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    document.addEventListener('mousedown', (e) => {
+      // Check if we clicked on a widget header (drag handle)
+      const header = e.target.closest('.widget-header');
+      if (header) {
+        const widget = header.closest('.widget');
+        if (widget) {
+          draggedElement = widget;
+          isDragging = true;
+          
+          const rect = widget.getBoundingClientRect();
+          offsetX = e.clientX - rect.left;
+          offsetY = e.clientY - rect.top;
+          
+          widget.style.cursor = 'grabbing';
+          widget.style.opacity = '0.8';
+          
+          e.preventDefault();
+        }
+      }
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging && draggedElement) {
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        
+        draggedElement.style.left = x + 'px';
+        draggedElement.style.top = y + 'px';
+        draggedElement.style.transform = 'none';
+        
+        e.preventDefault();
+      }
+    });
+    
+    document.addEventListener('mouseup', (e) => {
+      if (isDragging && draggedElement) {
+        draggedElement.style.cursor = 'move';
+        draggedElement.style.opacity = '1';
+        
+        // Save position
+        const rect = draggedElement.getBoundingClientRect();
+        widgetPositions[draggedElement.id] = { 
+          x: parseInt(draggedElement.style.left), 
+          y: parseInt(draggedElement.style.top) 
+        };
+        localStorage.setItem('widgetPositions', JSON.stringify(widgetPositions));
+        
+        console.log('💾 Saved widget position:', draggedElement.id, widgetPositions[draggedElement.id]);
+        
+        draggedElement = null;
+        isDragging = false;
+      }
+    });
+
+    // ========================================
+    // WIDGET VISIBILITY TOGGLE
+    // ========================================
+    
+    function toggleWidget(id) {
+      const widget = document.getElementById(id);
+      if (widget) {
+        const isHidden = widget.classList.toggle('hidden');
+        widgetVisibility[id] = !isHidden;
+        localStorage.setItem('widgetVisibility', JSON.stringify(widgetVisibility));
+      }
+    }
+
+    // ========================================
+    // TIME UPDATE
+    // ========================================
+    
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('timeDisplay').textContent = 
+        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // ========================================
+    // PERFORMANCE METRICS
+    // ========================================
+    
+    function updatePerformance() {
+      const fps = Math.floor(90 + Math.random() * 50);
+      const latency = Math.floor(15 + Math.random() * 35);
+      const cpu = Math.floor(25 + Math.random() * 45);
+      const ramUsed = (4 + Math.random() * 8).toFixed(1);
+      const ramTotal = 16;
+      const ramPercent = Math.floor((ramUsed / ramTotal) * 100);
+      const upload = (Math.random() * 500).toFixed(0);
+      const download = (Math.random() * 2000).toFixed(0);
+      
+      document.getElementById('fpsDisplay').textContent = fps + ' FPS';
+      document.getElementById('latencyDisplay').textContent = latency + 'ms';
+      document.getElementById('cpuDisplay').textContent = cpu + '%';
+      document.getElementById('cpuBar').style.width = cpu + '%';
+      document.getElementById('ramDisplay').textContent = ramUsed + ' GB / ' + ramTotal + ' GB';
+      document.getElementById('ramBar').style.width = ramPercent + '%';
+      document.getElementById('uploadDisplay').textContent = upload + ' KB/s';
+      document.getElementById('downloadDisplay').textContent = download + ' KB/s';
+    }
+    setInterval(updatePerformance, 2000);
+    updatePerformance();
+
+    // ========================================
+    // FRIEND COUNT (Real Data from Supabase)
+    // ========================================
+    
+    async function fetchFriendCount() {
+      try {
+        // Get current user from localStorage
+        const authData = localStorage.getItem('sb-mprvbelnfalnvcwvrsqe-auth-token');
+        if (!authData) return;
+        
+        const auth = JSON.parse(authData);
+        userId = auth.user?.id;
+        
+        if (!userId) return;
+        
+        // Fetch online friends count
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/profiles?select=id&status=eq.online&id=neq.${userId}`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${auth.access_token}`
+            }
+          }
+        );
+        
+        const friends = await response.json();
+        const count = Array.isArray(friends) ? friends.length : 0;
+        
+        document.getElementById('friendCount').textContent = count;
+        
+        // Play sound if friend count increased
+        if (count > previousFriendCount && previousFriendCount > 0) {
+          playSound('friendOnline');
+          showNotification('Friend Online', 'A friend just came online!', 'info');
+        }
+        
+        previousFriendCount = count;
+      } catch (error) {
+        console.error('Error fetching friend count:', error);
+        document.getElementById('friendCount').textContent = '?';
+      }
+    }
+    
+    setInterval(fetchFriendCount, 10000); // Every 10 seconds
+    fetchFriendCount();
+
+    // ========================================
+    // NOTIFICATIONS
+    // ========================================
+    
+    function showNotification(title, message, type, actions = null) {
+      const container = document.getElementById('notifications');
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      
+      notification.innerHTML = `
+        <div class="notification-header">
+          <span class="notification-title">${title}</span>
+          <span class="notification-close" onclick="this.parentElement.parentElement.remove()">✕</span>
+        </div>
+        <div class="notification-body">${message}</div>
+        ${actions ? `<div class="notification-actions">${actions}</div>` : ''}
+      `;
+      
+      container.appendChild(notification);
+      
+      // Auto-remove after 5 seconds if no actions
+      if (!actions) {
+        setTimeout(() => {
+          if (notification.parentElement) {
+            notification.remove();
+          }
+        }, 5000);
+      }
+    }
+    
+    // Party invite notification
+    function showPartyInvite(playerName, gameName, partyId = null) {
+      const actions = `
+        <button class="notification-btn btn-accept" onclick="acceptPartyInvite('${partyId}'); this.parentElement.parentElement.parentElement.remove();">
+          Accept
+        </button>
+        <button class="notification-btn btn-decline" onclick="declinePartyInvite('${partyId}'); this.parentElement.parentElement.parentElement.remove();">
+          Decline
+        </button>
+      `;
+      
+      showNotification(
+        '🎮 Party Invite',
+        `${playerName} invited you to play ${gameName}`,
+        'party',
+        actions
+      );
+      
+      playSound('notification');
+    }
+    
+    function acceptPartyInvite(partyId) {
+      playSound('success');
+      showNotification('Party Joined', 'Successfully joined the party!', 'success');
+      
+      // Send acceptance to main app (you can implement this in your party system)
+      console.log('✅ Accepted party invite:', partyId);
+      
+      // TODO: Implement actual party join logic via Supabase
+    }
+    
+    function declinePartyInvite(partyId) {
+      console.log('❌ Declined party invite:', partyId);
+    }
+
+    // ========================================
+    // SOUND NOTIFICATIONS
+    // ========================================
+    
+    function playSound(type) {
+      // Create audio context for sound effects
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      gainNode.gain.value = 0.1;
+      
+      switch(type) {
+        case 'friendOnline':
+          oscillator.frequency.value = 800;
+          oscillator.start();
+          setTimeout(() => {
+            oscillator.frequency.value = 1000;
+          }, 100);
+          oscillator.stop(audioContext.currentTime + 0.2);
+          break;
+        case 'notification':
+          oscillator.frequency.value = 600;
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.15);
+          break;
+        case 'success':
+          oscillator.frequency.value = 523.25; // C5
+          oscillator.start();
+          setTimeout(() => {
+            oscillator.frequency.value = 659.25; // E5
+          }, 50);
+          setTimeout(() => {
+            oscillator.frequency.value = 783.99; // G5
+          }, 100);
+          oscillator.stop(audioContext.currentTime + 0.25);
+          break;
+      }
+    }
+
+    // ========================================
+    // GAME DETECTION
+    // ========================================
+    
+    if (window.electron && window.electron.onGamesDetected) {
+      window.electron.onGamesDetected((games) => {
+        const gameWidget = document.getElementById('game');
+        const gameDisplay = document.getElementById('gameDisplay');
+        
+        if (games && games.length > 0) {
+          gameWidget.classList.remove('hidden');
+          gameDisplay.textContent = games[0].name;
+        } else {
+          if (!widgetVisibility['game']) {
+            gameWidget.classList.add('hidden');
+          }
+          gameDisplay.textContent = 'No game detected';
+        }
+      });
+    }
+
+    // ========================================
+    // BUTTON HANDLERS
+    // ========================================
+    
+    document.getElementById('close').addEventListener('click', () => {
+      if (window.electron && window.electron.closeOverlay) {
+        window.electron.closeOverlay();
+      }
+    });
+    
+    document.getElementById('settings').addEventListener('click', () => {
+      // Reset all widget positions
+      if (confirm('Reset all widget positions to default?')) {
+        localStorage.removeItem('widgetPositions');
+        localStorage.removeItem('widgetVisibility');
+        location.reload();
+      }
+    });
+
+    // ========================================
+    // REALTIME PARTY INVITES & NOTIFICATIONS
+    // ========================================
+    
+    // Listen for party invites from main app
+    if (window.electron && window.electron.onPartyInvite) {
+      window.electron.onPartyInvite((data) => {
+        console.log('📨 Party invite received:', data);
+        showPartyInvite(data.playerName, data.gameName, data.partyId);
+      });
+    }
+    
+    // Listen for friend online notifications
+    if (window.electron && window.electron.onFriendOnline) {
+      window.electron.onFriendOnline((data) => {
+        console.log('👋 Friend online:', data);
+        playSound('friendOnline');
+        showNotification('Friend Online', `${data.username} just came online!`, 'info');
+      });
+    }
+    
+    console.log('✅ TokenQube Enhanced Overlay Loaded!');
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,9 @@
+{
+  "name": "tokenqube-electron",
+  "version": "1.0.0",
+  "main": "main.js",
+  "dependencies": {
+    "find-process": "^1.4.7"
+  }
+}
+

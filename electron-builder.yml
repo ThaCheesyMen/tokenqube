@@ -1,0 +1,25 @@
+appId: com.tokenquest.app
+productName: TokenQuest
+directories:
+  output: dist-electron
+files:
+  - dist/**
+  - electron/**
+  - package.json
+win:
+  target: portable
+  signingHashAlgorithms: []
+  verifyUpdateCodeSignature: false
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+mac:
+  target:
+    - dmg
+  category: public.app-category.games
+linux:
+  target:
+    - AppImage
+    - deb
