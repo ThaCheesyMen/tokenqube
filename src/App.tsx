@@ -5,6 +5,8 @@ import { VoiceChatProvider } from './contexts/VoiceChatContext';
 import Auth from './pages/Auth';
 
 // Lazy load all pages for code splitting
+const Landing = lazy(() => import('./pages/Landing'));
+const Download = lazy(() => import('./pages/Download'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const LiveStudio = lazy(() => import('./pages/LiveStudio'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
@@ -38,6 +40,7 @@ import VoiceChatBar from './components/VoiceChatBar';
 import AchievementNotification from './components/AchievementNotification';
 import DailyLoginReward from './components/DailyLoginReward';
 import { ToastContainer, toast as toastManager } from './components/Toast';
+import { isElectron } from './utils/platform';
 
 // Loading skeleton component
 const LoadingSkeleton = () => (
@@ -56,7 +59,13 @@ const LoadingSkeleton = () => (
 
 function AppContent() {
   const { user, loading } = useAuth();
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  // Set initial page based on platform: Electron starts at 'auth', Web starts at 'home' (landing)
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (isElectron()) {
+      return 'auth';
+    }
+    return 'home';
+  });
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'warning' | 'info'; message: string }>>([]);
   const [openDMData, setOpenDMData] = useState<any>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -140,7 +149,44 @@ function AppContent() {
     );
   }
 
+  // If not logged in, show appropriate page based on platform and current route
   if (!user) {
+    // Landing page routes (only for web)
+    if ((currentPage === 'home' || currentPage === 'landing') && !isElectron()) {
+      return (
+        <Suspense fallback={<LoadingSkeleton />}>
+          <Landing onNavigate={handlePageChange} />
+        </Suspense>
+      );
+    }
+    
+    // Download page (only for web)
+    if (currentPage === 'download' && !isElectron()) {
+      return (
+        <Suspense fallback={<LoadingSkeleton />}>
+          <Download onNavigate={handlePageChange} />
+        </Suspense>
+      );
+    }
+
+    // Terms and Privacy pages (accessible without login)
+    if (currentPage === 'terms') {
+      return (
+        <Suspense fallback={<LoadingSkeleton />}>
+          <Terms />
+        </Suspense>
+      );
+    }
+
+    if (currentPage === 'privacy') {
+      return (
+        <Suspense fallback={<LoadingSkeleton />}>
+          <Privacy />
+        </Suspense>
+      );
+    }
+
+    // For all other cases (including Electron), show Auth
     return <Auth />;
   }
 
@@ -156,6 +202,9 @@ function AppContent() {
   const renderPage = () => {
     const PageComponent = (() => {
       switch (currentPage) {
+        case 'home':
+        case 'landing': return <Landing onNavigate={handlePageChange} />;
+        case 'download': return <Download onNavigate={handlePageChange} />;
         case 'dashboard': return <Dashboard onNavigate={handlePageChange} />;
         case 'livestudio': return <LiveStudio />;
         case 'marketplace': return <Marketplace />;

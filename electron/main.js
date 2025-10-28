@@ -150,11 +150,16 @@ function createWindow() {
     console.log('🎮 Window loaded, starting game detection...');
     startGameDetection();
     
-    // Send a test message to renderer
+    // Skip landing page - go directly to auth/app in Electron
+    // This ensures desktop app doesn't show the marketing landing page
     mainWindow.webContents.executeJavaScript(`
       console.log('✅ Electron main process is running!');
       console.log('🎮 Game detection system initialized');
       console.log('🎥 Screen capture permissions enabled');
+      console.log('🖥️ Desktop app: Skipping landing page');
+      
+      // Platform detection is already handled by the React app
+      // The app will automatically detect Electron and skip landing page
     `);
   });
 }
