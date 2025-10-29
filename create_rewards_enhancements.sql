@@ -7,6 +7,9 @@
 -- 1. TOKEN STAKING SYSTEM
 -- =====================================================
 
+-- Drop existing table if needed (CAREFUL: This will delete existing staking data!)
+-- DROP TABLE IF EXISTS public.token_staking CASCADE;
+
 -- Token staking table
 CREATE TABLE IF NOT EXISTS public.token_staking (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -20,6 +23,30 @@ CREATE TABLE IF NOT EXISTS public.token_staking (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add columns if they don't exist (for existing tables)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'token_staking' AND column_name = 'unlock_date') THEN
+        ALTER TABLE public.token_staking ADD COLUMN unlock_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'token_staking' AND column_name = 'reward_rate') THEN
+        ALTER TABLE public.token_staking ADD COLUMN reward_rate NUMERIC(10, 4) NOT NULL DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'token_staking' AND column_name = 'accumulated_rewards') THEN
+        ALTER TABLE public.token_staking ADD COLUMN accumulated_rewards INTEGER NOT NULL DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'token_staking' AND column_name = 'staked_at') THEN
+        ALTER TABLE public.token_staking ADD COLUMN staked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+    END IF;
+END $$;
 
 -- Add indexes for performance
 CREATE INDEX IF NOT EXISTS idx_token_staking_user_id ON public.token_staking(user_id);
