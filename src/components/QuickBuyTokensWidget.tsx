@@ -110,7 +110,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
             </div>
           </div>
           <button
-            onClick={onViewAll}
+            onClick={() => window.location.hash = '#/enhanced-token-economy'}
             className="px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-500/20"
           >
             <Coins className="w-5 h-5" />
