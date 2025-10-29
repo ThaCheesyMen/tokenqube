@@ -39,18 +39,18 @@ export default function QuickBuyTokensWidget({ onNavigate }: QuickBuyTokensWidge
       {/* Quick Packages */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         {QUICK_PACKAGES.map((pkg, index) => (
-          <div
+          <button
             key={index}
             onMouseEnter={() => setHoveredPackage(index)}
             onMouseLeave={() => setHoveredPackage(null)}
-            className={`relative bg-[#0f0f0f] rounded-xl p-4 border-2 transition-all cursor-pointer hover:scale-105 ${
+            onClick={onNavigate}
+            className={`relative bg-[#0f0f0f] rounded-xl p-4 border-2 transition-all cursor-pointer hover:scale-105 text-left ${
               pkg.popular
                 ? 'border-yellow-500 shadow-lg shadow-yellow-500/20'
                 : hoveredPackage === index
                 ? 'border-green-500/50'
                 : 'border-[#202225]'
             }`}
-            onClick={handleNavigate}
           >
             {pkg.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
