@@ -1,15 +1,20 @@
 import { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, AlertCircle, Loader } from 'lucide-react';
 import { toast } from './Toast';
+import { uploadMultipleImages } from '../lib/storage';
+import { useAuth } from '../contexts/AuthContext';
 
 interface MarketplaceImageUploadProps {
   images: string[];
   onChange: (images: string[]) => void;
   maxImages?: number;
+  useStorage?: boolean; // If true, upload to Supabase Storage; if false, use base64
 }
 
-export default function MarketplaceImageUpload({ images, onChange, maxImages = 5 }: MarketplaceImageUploadProps) {
+export default function MarketplaceImageUpload({ images, onChange, maxImages = 5, useStorage = true }: MarketplaceImageUploadProps) {
+  const { profile } = useAuth();
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,42 +27,66 @@ export default function MarketplaceImageUpload({ images, onChange, maxImages = 5
       return;
     }
 
+    if (!profile && useStorage) {
+      toast.error('Please log in to upload images');
+      return;
+    }
+
     setUploading(true);
+    setUploadProgress('Validating images...');
     
     try {
-      const newImages: string[] = [];
+      const validFiles: File[] = [];
       
+      // Validate all files first
       for (const file of files) {
-        // Validate file type
         if (!file.type.startsWith('image/')) {
           toast.error(`${file.name} is not an image`);
           continue;
         }
 
-        // Validate file size (5MB max)
         if (file.size > 5 * 1024 * 1024) {
           toast.error(`${file.name} is too large (max 5MB)`);
           continue;
         }
 
-        // Convert to base64 for preview (in production, upload to S3/Supabase Storage)
-        const reader = new FileReader();
-        const imageUrl = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-
-        newImages.push(imageUrl);
+        validFiles.push(file);
       }
 
-      onChange([...images, ...newImages]);
-      toast.success(`${newImages.length} image(s) added`);
+      if (validFiles.length === 0) {
+        setUploading(false);
+        return;
+      }
+
+      let newImageUrls: string[] = [];
+
+      if (useStorage && profile) {
+        // Upload to Supabase Storage (production)
+        setUploadProgress(`Uploading ${validFiles.length} image(s)...`);
+        newImageUrls = await uploadMultipleImages(validFiles, profile.id);
+        toast.success(`${validFiles.length} image(s) uploaded successfully!`);
+      } else {
+        // Convert to base64 (fallback/preview mode)
+        setUploadProgress('Converting images...');
+        for (const file of validFiles) {
+          const reader = new FileReader();
+          const imageUrl = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          newImageUrls.push(imageUrl);
+        }
+        toast.success(`${validFiles.length} image(s) added`);
+      }
+
+      onChange([...images, ...newImageUrls]);
     } catch (error) {
       console.error('Error uploading images:', error);
-      toast.error('Failed to upload images');
+      toast.error('Failed to upload images. Please try again.');
     } finally {
       setUploading(false);
+      setUploadProgress('');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -115,6 +144,14 @@ export default function MarketplaceImageUpload({ images, onChange, maxImages = 5
         onChange={handleFileSelect}
         className="hidden"
       />
+
+      {/* Upload Progress */}
+      {uploading && uploadProgress && (
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 flex items-center gap-3">
+          <Loader className="w-5 h-5 text-blue-500 animate-spin" />
+          <p className="text-white font-semibold">{uploadProgress}</p>
+        </div>
+      )}
 
       {/* Image Grid */}
       {images.length > 0 ? (

@@ -927,6 +927,7 @@ export default function Marketplace() {
                 images={newItem.images}
                 onChange={(images) => setNewItem({ ...newItem, images })}
                 maxImages={5}
+                useStorage={true}
               />
 
               {/* Fee Information */}
