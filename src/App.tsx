@@ -81,15 +81,19 @@ function AppContent() {
   // Auto-redirect to dashboard after login
   useEffect(() => {
     if (user && !loading) {
-      // If user just logged in and we're not on a valid page, go to dashboard
-      const validPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
-                         'party-finder', 'friends', 'squads', 'activity', 'friend-activity',
-                         'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics',
-                         'clips', 'games', 'token-economy', 'admin', 'admin-revenue', 'marketplace',
-                         'live-studio', 'referrals', 'terms', 'privacy'];
+      console.log('✅ User authenticated, currentPage:', currentPage);
       
-      if (!validPages.includes(currentPage) && currentPage !== 'overlay') {
-        console.log('🔄 User logged in - redirecting to dashboard from:', currentPage);
+      // List of valid pages for logged-in users
+      const validPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
+                         'partyfinder', 'friends', 'squads', 'activity', 'friendactivity',
+                         'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics',
+                         'clips', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
+                         'marketplace', 'livestudio', 'referrals', 'terms', 'privacy'];
+      
+      // If on auth, home, landing, or any invalid page → go to dashboard
+      if (currentPage === 'auth' || currentPage === 'home' || currentPage === 'landing' || 
+          (!validPages.includes(currentPage) && currentPage !== 'overlay' && currentPage !== 'download')) {
+        console.log('🔄 Redirecting to dashboard from:', currentPage);
         setCurrentPage('dashboard');
       }
     }
