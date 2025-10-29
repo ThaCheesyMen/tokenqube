@@ -6,6 +6,7 @@ interface LandingProps {
 }
 
 export default function Landing({ onNavigate }: LandingProps) {
+  // QuestCord Landing Page v1.0
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-indigo-900 to-gray-900">
       {/* Hero Section */}
