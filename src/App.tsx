@@ -32,6 +32,7 @@ const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
 const Clips = lazy(() => import('./pages/Clips'));
 const ClipsSystem = lazy(() => import('./pages/ClipsSystem'));
 const StripeIntegration = lazy(() => import('./pages/StripeIntegration'));
+const CryptoWallet = lazy(() => import('./pages/CryptoWallet'));
 const GameLibrary = lazy(() => import('./pages/GameLibrary'));
 const TokenEconomy = lazy(() => import('./pages/TokenEconomy'));
 const AdminRevenue = lazy(() => import('./pages/AdminRevenue'));
@@ -99,7 +100,7 @@ function AppContent() {
       const validPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
                          'partyfinder', 'friends', 'squads', 'activity', 'friendactivity',
                          'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics', 'analytics-dashboard',
-                         'clips', 'clips-system', 'wallet', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
+                         'clips', 'clips-system', 'wallet', 'crypto-wallet', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
                          'marketplace', 'auctionhouse', 'livestudio', 'referrals', 'terms', 'privacy'];
       
       // If on any other invalid page → go to dashboard
@@ -345,6 +346,7 @@ function AppContent() {
         case 'clips': return <Clips />;
         case 'clips-system': return <ClipsSystem />;
         case 'wallet': return <StripeIntegration />;
+        case 'crypto-wallet': return <CryptoWallet />;
         case 'gamelibrary': return <GameLibrary />;
         case 'tokeneconomy': return <TokenEconomy />;
         case 'adminrevenue': return <AdminRevenue />;
