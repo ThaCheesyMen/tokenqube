@@ -4,10 +4,11 @@ import { supabase } from '../lib/supabase';
 import { 
   Wallet, DollarSign, Download, TrendingUp, Shield,
   CheckCircle, AlertCircle, Clock, Coins, Bitcoin,
-  Star, Zap, Award, Copy, ExternalLink, QrCode
+  Star, Zap, Award, Copy, ExternalLink, QrCode, Lock, Unlock
 } from 'lucide-react';
 import { toast } from '../components/Toast';
 import { formatTokens } from '../utils/formatTokens';
+import CryptoStakingSection from '../components/CryptoStakingSection';
 
 interface CryptoPackage {
   id: string;
@@ -34,6 +35,10 @@ export default function CryptoWallet() {
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
   const [selectedCrypto, setSelectedCrypto] = useState<'BTC' | 'ETH' | 'USDT' | 'LTC' | 'DOGE'>('USDT');
+  const [activeTab, setActiveTab] = useState<'buy' | 'withdraw' | 'staking'>('buy');
+  const [stakingAmount, setStakingAmount] = useState('');
+  const [selectedStakeCrypto, setSelectedStakeCrypto] = useState<'BTC' | 'ETH' | 'USDT'>('USDT');
+  const [userStakes, setUserStakes] = useState<any[]>([]);
 
   // Token Packages (Buy with Crypto)
   const tokenPackages: CryptoPackage[] = [
@@ -87,7 +92,26 @@ export default function CryptoWallet() {
     if (paymentId) {
       checkPaymentStatus(paymentId);
     }
-  }, []);
+
+    // Fetch user stakes
+    if (profile) {
+      fetchUserStakes();
+    }
+  }, [profile]);
+
+  const fetchUserStakes = async () => {
+    if (!profile) return;
+
+    const { data } = await supabase
+      .from('crypto_staking')
+      .select('*')
+      .eq('user_id', profile.id)
+      .order('staked_at', { ascending: false });
+
+    if (data) {
+      setUserStakes(data);
+    }
+  };
 
   const handleBuyTokens = async (packageId: string) => {
     if (!profile) {
@@ -251,6 +275,43 @@ export default function CryptoWallet() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 border-b border-[#202225] pb-2">
+          <button
+            onClick={() => setActiveTab('buy')}
+            className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all rounded-t-lg ${
+              activeTab === 'buy'
+                ? 'bg-[#8B5CF6] text-white'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-[#1a1a1a]'
+            }`}
+          >
+            <DollarSign className="w-5 h-5" />
+            Buy Tokens
+          </button>
+          <button
+            onClick={() => setActiveTab('withdraw')}
+            className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all rounded-t-lg ${
+              activeTab === 'withdraw'
+                ? 'bg-[#8B5CF6] text-white'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-[#1a1a1a]'
+            }`}
+          >
+            <Download className="w-5 h-5" />
+            Withdraw
+          </button>
+          <button
+            onClick={() => setActiveTab('staking')}
+            className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all rounded-t-lg ${
+              activeTab === 'staking'
+                ? 'bg-[#8B5CF6] text-white'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-[#1a1a1a]'
+            }`}
+          >
+            <TrendingUp className="w-5 h-5" />
+            Staking
+          </button>
+        </div>
+
         {/* Payment Modal */}
         {paymentStatus && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -346,6 +407,7 @@ export default function CryptoWallet() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Buy Tokens */}
+          {activeTab === 'buy' && (
           <div>
             <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
               <Bitcoin className="w-6 h-6 text-[#8B5CF6]" />
@@ -460,7 +522,10 @@ export default function CryptoWallet() {
             </div>
           </div>
 
+          )}
+
           {/* Withdraw Earnings */}
+          {activeTab === 'withdraw' && (
           <div>
             <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
               <Download className="w-6 h-6 text-[#8B5CF6]" />
@@ -568,6 +633,12 @@ export default function CryptoWallet() {
               </div>
             </div>
           </div>
+          )}
+
+          {/* Crypto Staking Tab */}
+          {activeTab === 'staking' && (
+            <CryptoStakingSection />
+          )}
         </div>
       </div>
     </div>
