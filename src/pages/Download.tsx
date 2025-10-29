@@ -40,7 +40,9 @@ export default function DownloadPage({ onNavigate }: DownloadProps) {
             <h3 className="text-2xl font-bold mb-2">Windows</h3>
             <p className="text-gray-400 mb-6">Windows 10 or later</p>
             <a
-              href="https://github.com/ThaCheesyMen/tokenqube/releases/latest/download/QuestCord-Setup.exe"
+              href="https://github.com/ThaCheesyMen/tokenqube/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition-all duration-200 shadow-lg shadow-indigo-500/50"
             >
               <Download className="w-5 h-5" />
