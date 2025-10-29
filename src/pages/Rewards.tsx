@@ -768,9 +768,13 @@ export default function Rewards({ onNavigate }: RewardsProps = {}) {
               <TokenStakingWidget onViewAll={() => setActiveCategory('battlepass')} />
               <div className="space-y-6">
                 <QuickBuyTokensWidget onNavigate={() => {
+                  console.log('🟢 Rewards: QuickBuyTokensWidget onNavigate called');
+                  console.log('🟢 onNavigate prop exists:', !!onNavigate);
                   if (onNavigate) {
+                    console.log('🟢 Calling parent onNavigate with: enhanced-token-economy');
                     onNavigate('enhanced-token-economy');
                   } else {
+                    console.log('🟡 onNavigate not available, using fallback');
                     window.location.href = '/#/enhanced-token-economy';
                   }
                 }} />

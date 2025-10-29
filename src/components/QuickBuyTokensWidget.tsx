@@ -14,6 +14,17 @@ const QUICK_PACKAGES = [
 export default function QuickBuyTokensWidget({ onNavigate }: QuickBuyTokensWidgetProps) {
   const [hoveredPackage, setHoveredPackage] = useState<number | null>(null);
 
+  const handleClick = () => {
+    console.log('🔵 QuickBuyTokensWidget: Button clicked');
+    console.log('🔵 onNavigate function:', onNavigate);
+    if (onNavigate) {
+      console.log('🔵 Calling onNavigate()');
+      onNavigate();
+    } else {
+      console.log('🔴 onNavigate is undefined!');
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-2xl p-6 border border-[#202225] shadow-xl">
       {/* Header */}
@@ -28,7 +39,7 @@ export default function QuickBuyTokensWidget({ onNavigate }: QuickBuyTokensWidge
           </div>
         </div>
           <button
-            onClick={onNavigate}
+            onClick={handleClick}
             className="flex items-center gap-1 px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg font-semibold transition-colors"
           >
             <span>View All</span>
@@ -43,7 +54,7 @@ export default function QuickBuyTokensWidget({ onNavigate }: QuickBuyTokensWidge
             key={index}
             onMouseEnter={() => setHoveredPackage(index)}
             onMouseLeave={() => setHoveredPackage(null)}
-            onClick={onNavigate}
+            onClick={handleClick}
             className={`relative bg-[#0f0f0f] rounded-xl p-4 border-2 transition-all cursor-pointer hover:scale-105 text-left ${
               pkg.popular
                 ? 'border-yellow-500 shadow-lg shadow-yellow-500/20'
@@ -110,7 +121,7 @@ export default function QuickBuyTokensWidget({ onNavigate }: QuickBuyTokensWidge
             </div>
           </div>
           <button
-            onClick={onNavigate}
+            onClick={handleClick}
             className="px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-500/20"
           >
             <Coins className="w-5 h-5" />

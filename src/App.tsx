@@ -182,8 +182,11 @@ function AppContent() {
 
   // Smooth page transitions
   const handlePageChange = (page: string) => {
+    console.log('🔴 App.tsx handlePageChange called with:', page);
+    console.log('🔴 Current page:', currentPage);
     setIsTransitioning(true);
     setTimeout(() => {
+      console.log('🔴 Setting page to:', page);
       setCurrentPage(page);
       setIsTransitioning(false);
     }, 150);
