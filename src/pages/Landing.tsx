@@ -39,7 +39,7 @@ export default function Landing({ onNavigate }: LandingProps) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {/* Download Button */}
             <a
-              href="https://github.com/ThaCheesyMen/tokenqube/releases/latest/download/QuestCord-Setup.exe"
+              href="https://github.com/ThaCheesyMen/tokenqube/releases/download/v1.0.0/TokenQube.1.0.0.exe"
               className="flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg shadow-indigo-500/50 hover:shadow-indigo-500/70 hover:scale-105"
             >
               <Download className="w-5 h-5" />
