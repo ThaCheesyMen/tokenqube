@@ -235,6 +235,39 @@ function AppContent() {
   // User is logged in
   console.log('👤 User is logged in, currentPage:', currentPage);
 
+  // IMMEDIATE redirect for invalid pages when logged in
+  const validLoggedInPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
+                              'partyfinder', 'friends', 'squads', 'activity', 'friendactivity',
+                              'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics',
+                              'clips', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
+                              'marketplace', 'livestudio', 'referrals', 'terms', 'privacy', 'overlay'];
+  
+  if (!validLoggedInPages.includes(currentPage)) {
+    console.log('⚡ INSTANT REDIRECT from invalid page:', currentPage, '→ dashboard');
+    // Use synchronous state update
+    if (currentPage !== 'dashboard') {
+      setCurrentPage('dashboard');
+    }
+    // Show dashboard immediately
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] flex flex-col md:flex-row">
+        <DiscordSidebar 
+          currentPage="dashboard" 
+          onNavigate={handlePageChange}
+          unreadMessages={unreadMessages}
+        />
+        <div className="flex-1 flex flex-col">
+          <Suspense fallback={<LoadingSkeleton />}>
+            <Dashboard onNavigate={handlePageChange} />
+          </Suspense>
+        </div>
+        <VoiceChat />
+        <ToastContainer toasts={toasts} />
+        <CookieConsent />
+      </div>
+    );
+  }
+
   // Special handling for overlay mode - fullscreen transparent with floating widgets
   if (currentPage === 'overlay') {
     return (
@@ -247,9 +280,6 @@ function AppContent() {
   const renderPage = () => {
     const PageComponent = (() => {
       switch (currentPage) {
-        case 'home':
-        case 'landing': return <Landing onNavigate={handlePageChange} />;
-        case 'download': return <Download onNavigate={handlePageChange} />;
         case 'dashboard': return <Dashboard onNavigate={handlePageChange} />;
         case 'livestudio': return <LiveStudio />;
         case 'marketplace': return <Marketplace />;
@@ -276,9 +306,7 @@ function AppContent() {
         case 'adminpanel': return <AdminPanel onNavigate={handlePageChange} />;
         case 'terms': return <Terms />;
         case 'privacy': return <Privacy />;
-        case '404':
-        case 'not-found': return <NotFound onNavigate={handlePageChange} />;
-        default: return <NotFound onNavigate={handlePageChange} />;
+        default: return <Dashboard onNavigate={handlePageChange} />;
       }
     })();
 

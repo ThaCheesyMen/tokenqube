@@ -1,6 +1,6 @@
 {
   "name": "tokenqube",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "QuestCord - Gaming Rewards Platform",
   "main": "electron/main.js",
   "scripts": {
