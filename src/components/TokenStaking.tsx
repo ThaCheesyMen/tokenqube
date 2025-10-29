@@ -8,11 +8,11 @@ interface StakePosition {
   id: string;
   user_id: string;
   amount: number;
-  start_date: string;
-  end_date: string;
-  apy: number;
-  status: string;
-  rewards_earned: number;
+  staked_at: string;
+  unlock_date: string;
+  reward_rate: number;
+  accumulated_rewards: number;
+  is_active: boolean;
 }
 
 const STAKING_PLANS = [
@@ -41,16 +41,24 @@ export default function TokenStaking() {
 
     setLoading(true);
     try {
+      console.log('Fetching stakes for management page...');
       const { data, error } = await supabase
         .from('token_staking')
         .select('*')
         .eq('user_id', profile.id)
-        .order('created_at', { ascending: false });
+        .eq('is_active', true)
+        .order('staked_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Fetch error:', error);
+        throw error;
+      }
+      
+      console.log('Stakes loaded:', data);
       setStakes(data || []);
     } catch (error) {
       console.error('Error fetching stakes:', error);
+      toast.error('Failed to load stakes');
     } finally {
       setLoading(false);
     }
@@ -68,9 +76,9 @@ export default function TokenStaking() {
     }
 
     try {
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + selectedPlan.duration);
+      const now = new Date();
+      const unlockDate = new Date();
+      unlockDate.setDate(unlockDate.getDate() + selectedPlan.duration);
 
       // Deduct tokens
       const { error: balanceError } = await supabase
@@ -80,27 +88,34 @@ export default function TokenStaking() {
 
       if (balanceError) throw balanceError;
 
-      // Create stake
-      const { error: stakeError } = await supabase
+      // Create stake with correct column names
+      const { data: stakeData, error: stakeError } = await supabase
         .from('token_staking')
         .insert({
           user_id: profile.id,
           amount: stakeAmount,
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-          apy: selectedPlan.apy,
-          status: 'active'
-        });
+          staked_at: now.toISOString(),
+          unlock_date: unlockDate.toISOString(),
+          reward_rate: selectedPlan.apy / 100, // Convert to decimal
+          accumulated_rewards: 0,
+          is_active: true
+        })
+        .select()
+        .single();
 
-      if (stakeError) throw stakeError;
+      if (stakeError) {
+        console.error('Stake error:', stakeError);
+        throw stakeError;
+      }
 
-      toast.success(`Staked ${stakeAmount} tokens! 🎉`);
+      console.log('Stake created:', stakeData);
+      toast.success(`✅ Staked ${stakeAmount} tokens for ${selectedPlan.name}!`);
       setShowStakeModal(false);
       setStakeAmount(0);
-      fetchStakes();
-    } catch (error) {
+      await fetchStakes();
+    } catch (error: any) {
       console.error('Error creating stake:', error);
-      toast.error('Failed to stake tokens');
+      toast.error(error.message || 'Failed to stake tokens');
     }
   };
 
@@ -108,10 +123,10 @@ export default function TokenStaking() {
     if (!profile) return;
 
     try {
-      // Update stake status
+      // Update stake to inactive
       const { error: stakeError } = await supabase
         .from('token_staking')
-        .update({ status: 'completed' })
+        .update({ is_active: false })
         .eq('id', stakeId);
 
       if (stakeError) throw stakeError;
@@ -125,30 +140,30 @@ export default function TokenStaking() {
 
       if (balanceError) throw balanceError;
 
-      toast.success(`Unstaked ${amount} tokens + ${rewardsEarned} rewards! 💰`);
-      fetchStakes();
-    } catch (error) {
+      toast.success(`✅ Unstaked ${amount} tokens + ${rewardsEarned} rewards!`);
+      await fetchStakes();
+    } catch (error: any) {
       console.error('Error unstaking:', error);
-      toast.error('Failed to unstake');
+      toast.error(error.message || 'Failed to unstake');
     }
   };
 
   const calculateRewards = (stake: StakePosition) => {
-    const start = new Date(stake.start_date);
-    const end = new Date(stake.end_date);
+    const start = new Date(stake.staked_at);
+    const end = new Date(stake.unlock_date);
     const now = new Date();
     
     const totalDuration = end.getTime() - start.getTime();
     const elapsed = Math.min(now.getTime() - start.getTime(), totalDuration);
     const progress = elapsed / totalDuration;
 
-    const maxRewards = stake.amount * (stake.apy / 100);
+    const maxRewards = stake.amount * stake.reward_rate;
     return Math.floor(maxRewards * progress);
   };
 
   const getProgressPercentage = (stake: StakePosition) => {
-    const start = new Date(stake.start_date);
-    const end = new Date(stake.end_date);
+    const start = new Date(stake.staked_at);
+    const end = new Date(stake.unlock_date);
     const now = new Date();
     
     const totalDuration = end.getTime() - start.getTime();
@@ -157,19 +172,19 @@ export default function TokenStaking() {
     return (elapsed / totalDuration) * 100;
   };
 
-  const canUnstake = (endDate: string) => {
-    return new Date(endDate) <= new Date();
+  const canUnstake = (unlockDate: string) => {
+    return new Date(unlockDate) <= new Date();
   };
 
   const getTotalStaked = () => {
     return stakes
-      .filter(s => s.status === 'active')
+      .filter(s => s.is_active)
       .reduce((sum, s) => sum + s.amount, 0);
   };
 
   const getTotalRewards = () => {
     return stakes
-      .filter(s => s.status === 'active')
+      .filter(s => s.is_active)
       .reduce((sum, s) => sum + calculateRewards(s), 0);
   };
 
@@ -205,7 +220,7 @@ export default function TokenStaking() {
         <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#202225]">
           <p className="text-sm text-gray-400 mb-1">Active Positions</p>
           <p className="text-2xl font-bold text-white">
-            {stakes.filter(s => s.status === 'active').length}
+            {stakes.filter(s => s.is_active).length}
           </p>
         </div>
       </div>
@@ -217,7 +232,7 @@ export default function TokenStaking() {
             <div key={i} className="animate-pulse bg-[#0f0f0f] rounded-xl h-32"></div>
           ))}
         </div>
-      ) : stakes.filter(s => s.status === 'active').length === 0 ? (
+      ) : stakes.filter(s => s.is_active).length === 0 ? (
         <div className="text-center py-12">
           <Lock className="w-16 h-16 mx-auto mb-4 text-gray-600" />
           <p className="text-gray-400">No active stakes</p>
@@ -226,11 +241,11 @@ export default function TokenStaking() {
       ) : (
         <div className="space-y-4">
           {stakes
-            .filter(s => s.status === 'active')
+            .filter(s => s.is_active)
             .map((stake) => {
               const rewards = calculateRewards(stake);
               const progress = getProgressPercentage(stake);
-              const unlocked = canUnstake(stake.end_date);
+              const unlocked = canUnstake(stake.unlock_date);
 
               return (
                 <div
@@ -240,7 +255,7 @@ export default function TokenStaking() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-xl font-bold text-white">{stake.amount} 🪙</p>
-                      <p className="text-sm text-gray-400">{stake.apy}% APY</p>
+                      <p className="text-sm text-gray-400">{(stake.reward_rate * 100).toFixed(0)}% APY</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-400">Rewards</p>
@@ -271,7 +286,7 @@ export default function TokenStaking() {
                     <div className="text-sm text-gray-400">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        Ends {new Date(stake.end_date).toLocaleDateString()}
+                        Ends {new Date(stake.unlock_date).toLocaleDateString()}
                       </span>
                     </div>
                     <button
