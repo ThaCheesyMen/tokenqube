@@ -34,7 +34,6 @@ const AdminRevenue = lazy(() => import('./pages/AdminRevenue'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
-const NotFound = lazy(() => import('./pages/NotFound'));
 
 import DiscordSidebar from './components/DiscordSidebar';
 import VoiceChatBar from './components/VoiceChatBar';
@@ -180,6 +179,31 @@ function AppContent() {
     );
   }
 
+  // 🚨 CRITICAL: If user is logged in and on landing/home/auth → redirect IMMEDIATELY
+  if (user && (currentPage === 'home' || currentPage === 'landing' || currentPage === 'auth')) {
+    console.log('🚀 INSTANT REDIRECT: User logged in on landing page → dashboard');
+    // Use setTimeout to avoid state update during render
+    setTimeout(() => setCurrentPage('dashboard'), 0);
+    
+    // Return dashboard immediately to avoid showing landing page
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] flex flex-col md:flex-row">
+        <DiscordSidebar 
+          currentPage="dashboard" 
+          onNavigate={handlePageChange}
+        />
+        <div className="flex-1 flex flex-col">
+          <Suspense fallback={<LoadingSkeleton />}>
+            <Dashboard onNavigate={handlePageChange} />
+          </Suspense>
+        </div>
+        <VoiceChatBar />
+        <ToastContainer toasts={toasts} onClose={(id) => setToasts(toasts.filter(t => t.id !== id))} />
+        <CookieConsent />
+      </div>
+    );
+  }
+
   // If not logged in, show appropriate page based on platform and current route
   if (!user) {
     // Debug logging
@@ -245,24 +269,22 @@ function AppContent() {
   if (!validLoggedInPages.includes(currentPage)) {
     console.log('⚡ INSTANT REDIRECT from invalid page:', currentPage, '→ dashboard');
     // Use synchronous state update
-    if (currentPage !== 'dashboard') {
-      setCurrentPage('dashboard');
-    }
+    setTimeout(() => setCurrentPage('dashboard'), 0);
+    
     // Show dashboard immediately
     return (
       <div className="min-h-screen bg-[#0f0f0f] flex flex-col md:flex-row">
         <DiscordSidebar 
           currentPage="dashboard" 
           onNavigate={handlePageChange}
-          unreadMessages={unreadMessages}
         />
         <div className="flex-1 flex flex-col">
           <Suspense fallback={<LoadingSkeleton />}>
             <Dashboard onNavigate={handlePageChange} />
           </Suspense>
         </div>
-        <VoiceChat />
-        <ToastContainer toasts={toasts} />
+        <VoiceChatBar />
+        <ToastContainer toasts={toasts} onClose={(id) => setToasts(toasts.filter(t => t.id !== id))} />
         <CookieConsent />
       </div>
     );
