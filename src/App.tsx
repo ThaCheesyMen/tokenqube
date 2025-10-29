@@ -80,8 +80,17 @@ function AppContent() {
 
   // Auto-redirect to dashboard after login
   useEffect(() => {
+    console.log('🔍 Redirect Check - User:', !!user, 'Loading:', loading, 'CurrentPage:', currentPage);
+    
     if (user && !loading) {
       console.log('✅ User authenticated, currentPage:', currentPage);
+      
+      // FORCE redirect from auth/home/landing to dashboard
+      if (currentPage === 'auth' || currentPage === 'home' || currentPage === 'landing') {
+        console.log('🚀 FORCING REDIRECT to dashboard from:', currentPage);
+        setTimeout(() => setCurrentPage('dashboard'), 0);
+        return;
+      }
       
       // List of valid pages for logged-in users
       const validPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
@@ -90,14 +99,13 @@ function AppContent() {
                          'clips', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
                          'marketplace', 'livestudio', 'referrals', 'terms', 'privacy'];
       
-      // If on auth, home, landing, or any invalid page → go to dashboard
-      if (currentPage === 'auth' || currentPage === 'home' || currentPage === 'landing' || 
-          (!validPages.includes(currentPage) && currentPage !== 'overlay' && currentPage !== 'download')) {
-        console.log('🔄 Redirecting to dashboard from:', currentPage);
-        setCurrentPage('dashboard');
+      // If on any other invalid page → go to dashboard
+      if (!validPages.includes(currentPage) && currentPage !== 'overlay' && currentPage !== 'download') {
+        console.log('🔄 Redirecting to dashboard from invalid page:', currentPage);
+        setTimeout(() => setCurrentPage('dashboard'), 0);
       }
     }
-  }, [user, loading]);
+  }, [user, loading, currentPage]);
 
   useEffect(() => {
     // Listen for navigation to chat with DM data
