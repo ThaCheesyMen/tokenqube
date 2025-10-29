@@ -10,6 +10,7 @@ const Download = lazy(() => import('./pages/Download'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const LiveStudio = lazy(() => import('./pages/LiveStudio'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
+const AuctionHouse = lazy(() => import('./pages/AuctionHouse'));
 const Rewards = lazy(() => import('./pages/Rewards'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Referrals = lazy(() => import('./pages/Referrals'));
@@ -96,7 +97,7 @@ function AppContent() {
                          'partyfinder', 'friends', 'squads', 'activity', 'friendactivity',
                          'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics',
                          'clips', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
-                         'marketplace', 'livestudio', 'referrals', 'terms', 'privacy'];
+                         'marketplace', 'auctionhouse', 'livestudio', 'referrals', 'terms', 'privacy'];
       
       // If on any other invalid page → go to dashboard
       if (!validPages.includes(currentPage) && currentPage !== 'overlay' && currentPage !== 'download') {
@@ -320,6 +321,7 @@ function AppContent() {
         case 'dashboard': return <Dashboard onNavigate={handlePageChange} />;
         case 'livestudio': return <LiveStudio />;
         case 'marketplace': return <Marketplace />;
+        case 'auctionhouse': return <AuctionHouse />;
         case 'rewards': return <Rewards />;
         case 'leaderboard': return <Leaderboard />;
         case 'referrals': return <Referrals />;
