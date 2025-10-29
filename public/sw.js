@@ -1,5 +1,5 @@
 // Service Worker for TokenQuest PWA
-const CACHE_NAME = 'questcord-v1.0.3'; // Updated cache version to clear old chunks
+const CACHE_NAME = 'questcord-v1.2.0'; // Rewards system update
 const urlsToCache = [
   '/',
   '/index.html',

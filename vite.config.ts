@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-// Build: 2025-10-29 18:20 - v1.0.7 - PRODUCTION DEPLOY - Fix login 404
+// Build: 2025-10-29 20:00 - v1.2.0 - REWARDS SYSTEM OVERHAUL - Quests, Staking, Buy/Sell
 export default defineConfig({
   plugins: [
     react(),
