@@ -1,114 +1,119 @@
-// Service Worker for TokenQuest PWA
-const CACHE_NAME = 'questcord-v1.2.0'; // Rewards system update
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+// Service Worker for TokenQuest PWA - v1.2.1 (Fix stale chunks)
+const CACHE_NAME = 'questcord-v1.2.1';
+const STATIC_ASSETS = [
+  '/manifest.json',
+  '/favicon.svg',
+  '/offline.html'
 ];
 
-// Install event - cache resources
+// Install - Cache ONLY essential static files (NO HTML!)
 self.addEventListener('install', (event) => {
-  console.log('⚙️ Service Worker: Installing...');
+  console.log('⚙️ Service Worker v1.2.1: Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('📦 Service Worker: Caching app shell');
-        return cache.addAll(urlsToCache);
+        console.log('📦 Service Worker: Caching essential assets');
+        return cache.addAll(STATIC_ASSETS);
       })
       .then(() => self.skipWaiting())
   );
 });
 
-// Activate event - clean up old caches
+// Activate - DELETE ALL old caches to force fresh start
 self.addEventListener('activate', (event) => {
-  console.log('✅ Service Worker: Activating...');
+  console.log('✅ Service Worker v1.2.1: Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('🗑️ Service Worker: Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
+          // Delete ALL caches (will force fresh reload)
+          console.log('🗑️ Service Worker: Clearing cache:', cacheName);
+          return caches.delete(cacheName);
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log('✨ All caches cleared! Fresh start.');
+      return self.clients.claim();
+    })
   );
 });
 
-// Fetch event - Network first for JS/CSS chunks, cache for static assets
+// Fetch - NETWORK-FIRST for EVERYTHING (prevent stale chunks)
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
   
-  // Skip Supabase API calls (always use network)
-  if (event.request.url.includes('supabase.co')) {
-    return;
-  }
+  const url = new URL(event.request.url);
+  
+  // Skip chrome-extension and non-http requests
+  if (!url.protocol.startsWith('http')) return;
+  
+  // Skip Supabase API calls (always network, never cache)
+  if (url.host.includes('supabase.co')) return;
 
-  // Network-first for JS/CSS chunks (to avoid stale chunk errors)
-  if (event.request.url.includes('/assets/') && 
-      (event.request.url.endsWith('.js') || event.request.url.endsWith('.css'))) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // Cache the new version
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(event.request);
-        })
-    );
-    return;
-  }
-
-  // Cache-first for everything else
+  // NETWORK-FIRST for ALL requests
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        // Cache hit - return response
-        if (response) {
+        // ❌ DO NOT CACHE:
+        // - HTML pages (they reference chunk filenames that change every build)
+        // - Root path
+        // - Failed responses
+        if (
+          url.pathname === '/' ||
+          url.pathname.endsWith('.html') ||
+          !response.ok ||
+          response.status !== 200
+        ) {
           return response;
         }
 
-        // Clone the request
-        const fetchRequest = event.request.clone();
+        // ✅ Cache static assets (images, fonts, manifest, icons)
+        // But NOT JS/CSS chunks (they have hashes that change)
+        const shouldCache = (
+          url.pathname.includes('/icon-') ||
+          url.pathname.includes('.png') ||
+          url.pathname.includes('.jpg') ||
+          url.pathname.includes('.svg') ||
+          url.pathname.includes('.woff') ||
+          url.pathname === '/manifest.json' ||
+          url.pathname === '/favicon.svg'
+        );
 
-        return fetch(fetchRequest).then((response) => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+        if (shouldCache) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        
+        return response;
+      })
+      .catch((error) => {
+        console.log('🌐 Network failed, trying cache:', url.pathname);
+        // Fallback to cache only if network completely fails
+        return caches.match(event.request).then((cached) => {
+          if (cached) {
+            console.log('📦 Serving from cache:', url.pathname);
+            return cached;
           }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
-        }).catch(() => {
-          // Offline fallback
-          return new Response('Offline - Please check your connection', {
+          
+          // Last resort: offline page
+          if (url.pathname.endsWith('.html') || url.pathname === '/') {
+            return caches.match('/offline.html');
+          }
+          
+          // Return error for other resources
+          return new Response('Network error', {
             status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain'
-            })
+            statusText: 'Service Unavailable'
           });
         });
       })
   );
 });
 
-// Push notification support (for future)
+// Push notification support
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -136,5 +141,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-console.log('🚀 Service Worker: Loaded and ready!');
-
+console.log('🚀 Service Worker v1.2.1: Loaded and ready!');

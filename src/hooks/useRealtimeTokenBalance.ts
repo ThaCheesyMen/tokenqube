@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -21,6 +21,16 @@ import { useAuth } from '../contexts/AuthContext';
  */
 export function useRealtimeTokenBalance(onUpdate?: (newBalance: number, totalEarned?: number) => void) {
   const { profile, refreshProfile } = useAuth();
+  
+  // Store callback in ref to avoid re-subscriptions when callback changes
+  const onUpdateRef = useRef(onUpdate);
+  const refreshProfileRef = useRef(refreshProfile);
+  
+  // Update refs when values change
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+    refreshProfileRef.current = refreshProfile;
+  }, [onUpdate, refreshProfile]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -51,13 +61,13 @@ export function useRealtimeTokenBalance(onUpdate?: (newBalance: number, totalEar
             );
           }
 
-          // Call callback if provided
-          if (onUpdate) {
-            onUpdate(newBalance, payload.new?.total_earned);
+          // Call callback if provided (using ref to avoid re-subscriptions)
+          if (onUpdateRef.current) {
+            onUpdateRef.current(newBalance, payload.new?.total_earned);
           }
 
-          // Refresh profile in context
-          refreshProfile();
+          // Refresh profile in context (using ref to avoid re-subscriptions)
+          refreshProfileRef.current();
         }
       )
       .subscribe((status) => {
@@ -72,6 +82,6 @@ export function useRealtimeTokenBalance(onUpdate?: (newBalance: number, totalEar
       console.log('🔌 Unsubscribing from token updates');
       supabase.removeChannel(channel);
     };
-  }, [profile?.id, onUpdate, refreshProfile]);
+  }, [profile?.id]); // Only re-subscribe when user ID changes
 }
 
