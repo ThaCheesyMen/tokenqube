@@ -6,8 +6,9 @@ import {
   Heart, Eye, Tag, DollarSign, Shield, Package, Clock,
   AlertCircle, CheckCircle, X, Coins, Grid, List, ChevronDown,
   Sparkles, Award, MessageSquare, ExternalLink, Image as ImageIcon,
-  Gavel, ArrowLeftRight, Timer
+  Gavel, ArrowLeftRight, Timer, Bitcoin
 } from 'lucide-react';
+import UnifiedPaymentModal from '../components/UnifiedPaymentModal';
 import { toast } from '../components/Toast';
 import { formatTokens } from '../utils/formatTokens';
 import MarketplaceImageUpload from '../components/MarketplaceImageUpload';
@@ -69,6 +70,8 @@ export default function Marketplace() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [marketMode, setMarketMode] = useState<'marketplace' | 'auctions' | 'trades'>('marketplace');
   const [showTradeModal, setShowTradeModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentItem, setPaymentItem] = useState<MarketplaceItem | null>(null);
   
   const [filters, setFilters] = useState<MarketplaceFilters>({
     search: '',
@@ -283,8 +286,11 @@ export default function Marketplace() {
       return;
     }
 
+    // Check if user has enough tokens
     if ((profile.token_balance || 0) < item.price_tokens) {
-      toast.error('Insufficient tokens');
+      // Show payment modal to buy tokens or pay with crypto
+      setPaymentItem(item);
+      setShowPaymentModal(true);
       return;
     }
 
@@ -827,6 +833,23 @@ export default function Marketplace() {
             <TradeSystem onClose={() => setShowTradeModal(false)} />
           </div>
         </div>
+      )}
+
+      {/* Unified Payment Modal */}
+      {showPaymentModal && paymentItem && (
+        <UnifiedPaymentModal
+          show={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setPaymentItem(null);
+          }}
+          tokensNeeded={paymentItem.price_tokens}
+          purpose={`Buy ${paymentItem.item_name}`}
+          onSuccess={() => {
+            fetchItems();
+            toast.success('Redirecting to payment...');
+          }}
+        />
       )}
 
       {/* Create Item Modal */}
