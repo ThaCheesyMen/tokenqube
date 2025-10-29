@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Coins, TrendingUp, Clock, Gift, ChevronRight, Zap } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Coins, TrendingUp, Clock, Gift, ChevronRight, Zap, Lock } from 'lucide-react';
+import { toast } from './Toast';
 
 interface StakedToken {
   id: string;
@@ -23,6 +23,9 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
   const [totalStaked, setTotalStaked] = useState(0);
   const [totalRewards, setTotalRewards] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showStakeModal, setShowStakeModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{duration: number; rate: number; minAmount: number} | null>(null);
+  const [stakeAmount, setStakeAmount] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -57,7 +60,9 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
   const stakingPlans = [
     {
       duration: '7 Days',
+      durationDays: 7,
       rate: '5% APY',
+      ratePercent: 5,
       minAmount: 100,
       icon: '⚡',
       color: 'from-yellow-500 to-orange-500',
@@ -66,7 +71,9 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
     },
     {
       duration: '30 Days',
+      durationDays: 30,
       rate: '12% APY',
+      ratePercent: 12,
       minAmount: 500,
       icon: '🔥',
       color: 'from-orange-500 to-red-500',
@@ -75,7 +82,9 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
     },
     {
       duration: '90 Days',
+      durationDays: 90,
       rate: '25% APY',
+      ratePercent: 25,
       minAmount: 1000,
       icon: '💎',
       color: 'from-purple-500 to-pink-500',
@@ -83,6 +92,116 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
       borderColor: 'border-purple-500/30'
     }
   ];
+
+  const handleStake = async () => {
+    if (!profile || !selectedPlan) return;
+
+    const amount = parseInt(stakeAmount);
+    const balance = profile.token_balance || 0;
+
+    if (isNaN(amount) || amount < selectedPlan.minAmount) {
+      toast.error(`Minimum stake amount is ${selectedPlan.minAmount} tokens`);
+      return;
+    }
+
+    if (amount > balance) {
+      toast.error('Insufficient token balance');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Calculate unlock date
+      const unlockDate = new Date();
+      unlockDate.setDate(unlockDate.getDate() + selectedPlan.duration);
+
+      // Create staking record
+      const { error: stakeError } = await supabase
+        .from('token_staking')
+        .insert({
+          user_id: profile.id,
+          amount: amount,
+          staked_at: new Date().toISOString(),
+          unlock_date: unlockDate.toISOString(),
+          reward_rate: selectedPlan.rate / 365, // Daily rate
+          accumulated_rewards: 0,
+          is_active: true,
+        });
+
+      if (stakeError) throw stakeError;
+
+      // Deduct tokens from balance
+      const { error: balanceError } = await supabase
+        .from('profiles')
+        .update({ token_balance: balance - amount })
+        .eq('id', profile.id);
+
+      if (balanceError) throw balanceError;
+
+      // Create transaction record
+      await supabase.from('transactions').insert({
+        user_id: profile.id,
+        amount: -amount,
+        type: 'staking',
+        description: `Staked ${amount} tokens for ${selectedPlan.duration} days`,
+      });
+
+      toast.success(`Successfully staked ${amount} tokens!`);
+      setShowStakeModal(false);
+      setStakeAmount('');
+      setSelectedPlan(null);
+      fetchStakingData();
+    } catch (error: any) {
+      console.error('Staking error:', error);
+      toast.error(error.message || 'Failed to stake tokens');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnstake = async (stakeId: string, amount: number, rewards: number) => {
+    if (!profile) return;
+
+    try {
+      setLoading(true);
+
+      // Mark stake as inactive
+      const { error: stakeError } = await supabase
+        .from('token_staking')
+        .update({ is_active: false })
+        .eq('id', stakeId);
+
+      if (stakeError) throw stakeError;
+
+      // Return tokens + rewards to balance
+      const currentBalance = profile.token_balance || 0;
+      const totalReturn = amount + rewards;
+
+      const { error: balanceError } = await supabase
+        .from('profiles')
+        .update({ token_balance: currentBalance + totalReturn })
+        .eq('id', profile.id);
+
+      if (balanceError) throw balanceError;
+
+      // Create transaction record
+      await supabase.from('transactions').insert({
+        user_id: profile.id,
+        amount: totalReturn,
+        type: 'unstaking',
+        description: `Unstaked ${amount} tokens + ${rewards} rewards`,
+      });
+
+      toast.success(`Unstaked ${amount} tokens and claimed ${rewards} rewards!`);
+      fetchStakingData();
+    } catch (error: any) {
+      console.error('Unstaking error:', error);
+      toast.error(error.message || 'Failed to unstake tokens');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const calculateTimeRemaining = (unlockDate: string) => {
     const now = new Date().getTime();
@@ -164,7 +283,14 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
               </div>
               <div className="space-y-2 text-xs text-gray-400">
                 <p>Min: {plan.minAmount} tokens</p>
-                <button className={`w-full py-2 bg-gradient-to-r ${plan.color} text-white rounded-lg font-semibold hover:opacity-90 transition-opacity`}>
+                <button
+                  onClick={() => {
+                    setSelectedPlan({ duration: plan.durationDays, rate: plan.ratePercent, minAmount: plan.minAmount });
+                    setShowStakeModal(true);
+                  }}
+                  className={`w-full py-2 bg-gradient-to-r ${plan.color} text-white rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1`}
+                >
+                  <Lock className="w-3 h-3" />
                   Stake Now
                 </button>
               </div>
@@ -192,10 +318,18 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
                   </div>
                   <div className="text-right">
                     <p className="text-green-400 font-bold">+{stake.accumulated_rewards.toLocaleString()}</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                    <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
                       <Clock className="w-3 h-3" />
                       {calculateTimeRemaining(stake.unlock_date)}
                     </div>
+                    {new Date(stake.unlock_date).getTime() <= Date.now() && (
+                      <button
+                        onClick={() => handleUnstake(stake.id, stake.amount, stake.accumulated_rewards)}
+                        className="text-xs px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold"
+                      >
+                        Claim
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -210,6 +344,57 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
           💡 <span className="font-bold">Lock your tokens</span> to earn passive rewards. Longer locks = higher APY!
         </p>
       </div>
+
+      {/* Stake Modal */}
+      {showStakeModal && selectedPlan && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowStakeModal(false)}>
+          <div className="bg-[#1a1a1a] rounded-2xl p-8 border border-[#202225] max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-2xl font-bold text-white mb-2">Stake Tokens</h3>
+            <p className="text-gray-400 mb-6">Lock your tokens for {selectedPlan.duration} days to earn {selectedPlan.rate}% APY</p>
+            
+            <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#202225] mb-4">
+              <label className="text-sm text-gray-400 mb-2 block">Amount to Stake</label>
+              <input
+                type="number"
+                value={stakeAmount}
+                onChange={(e) => setStakeAmount(e.target.value)}
+                placeholder={`Min: ${selectedPlan.minAmount} tokens`}
+                className="w-full bg-[#1a1a1a] border border-[#202225] rounded-lg px-4 py-3 text-white focus:border-[#8B5CF6] focus:outline-none"
+              />
+              <p className="text-xs text-gray-500 mt-2">Available: {profile?.token_balance?.toLocaleString() || 0} tokens</p>
+            </div>
+
+            {stakeAmount && parseInt(stakeAmount) >= selectedPlan.minAmount && (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-4">
+                <p className="text-sm text-green-300">
+                  <span className="font-bold">Estimated rewards:</span> +{Math.round(parseInt(stakeAmount) * (selectedPlan.rate / 100))} tokens after {selectedPlan.duration} days
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowStakeModal(false);
+                  setStakeAmount('');
+                  setSelectedPlan(null);
+                }}
+                className="flex-1 px-6 py-3 bg-[#0f0f0f] hover:bg-[#1a1a1a] text-white rounded-lg font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStake}
+                disabled={!stakeAmount || parseInt(stakeAmount) < selectedPlan.minAmount}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+              >
+                <Lock className="w-5 h-5" />
+                Stake Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

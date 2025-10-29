@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Target, CheckCircle, Clock, Coins, ChevronRight, Zap } from 'lucide-react';
+import { Target, CheckCircle, Clock, Coins, ChevronRight, Zap, Play } from 'lucide-react';
+import { toast } from './Toast';
 
 interface Quest {
   id: string;
@@ -66,6 +67,43 @@ export default function QuestsWidget({ onViewAll }: QuestsWidgetProps) {
       case 'medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       case 'hard': return 'bg-red-500/20 text-red-400 border-red-500/30';
       default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
+
+  const handleStartQuest = async (questId: string, questTitle: string) => {
+    if (!profile) {
+      toast.error('You must be logged in to start a quest');
+      return;
+    }
+
+    try {
+      // Calculate expiration (24 hours from now for daily quests)
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
+
+      // Insert user quest
+      const { error } = await supabase
+        .from('user_quests')
+        .insert({
+          user_id: profile.id,
+          quest_id: questId,
+          status: 'active',
+          progress: {},
+          assigned_at: new Date().toISOString(),
+          expires_at: expiresAt.toISOString(),
+        });
+
+      if (error) {
+        console.error('Error starting quest:', error);
+        toast.error('Failed to start quest. You may already have this quest active.');
+        return;
+      }
+
+      toast.success(`Quest "${questTitle}" started! Track your progress in the Quests tab.`);
+      fetchQuests(); // Refresh the list
+    } catch (error: any) {
+      console.error('Error starting quest:', error);
+      toast.error(error.message || 'Failed to start quest');
     }
   };
 
@@ -146,7 +184,11 @@ export default function QuestsWidget({ onViewAll }: QuestsWidgetProps) {
                     <p className="text-sm font-bold text-blue-400">+{quest.xp_reward || 50}</p>
                   </div>
                 </div>
-                <button className="ml-auto px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+                <button
+                  onClick={() => handleStartQuest(quest.id, quest.title || 'Quest')}
+                  className="ml-auto px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity flex items-center gap-2"
+                >
+                  <Play className="w-4 h-4" />
                   Start Quest
                 </button>
               </div>
