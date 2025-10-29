@@ -28,7 +28,10 @@ const BattlePass = lazy(() => import('./pages/BattlePass'));
 const Tournaments = lazy(() => import('./pages/Tournaments'));
 const RankedLeaderboard = lazy(() => import('./pages/RankedLeaderboard'));
 const Analytics = lazy(() => import('./pages/Analytics'));
+const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
 const Clips = lazy(() => import('./pages/Clips'));
+const ClipsSystem = lazy(() => import('./pages/ClipsSystem'));
+const StripeIntegration = lazy(() => import('./pages/StripeIntegration'));
 const GameLibrary = lazy(() => import('./pages/GameLibrary'));
 const TokenEconomy = lazy(() => import('./pages/TokenEconomy'));
 const AdminRevenue = lazy(() => import('./pages/AdminRevenue'));
@@ -95,8 +98,8 @@ function AppContent() {
       // List of valid pages for logged-in users
       const validPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
                          'partyfinder', 'friends', 'squads', 'activity', 'friendactivity',
-                         'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics',
-                         'clips', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
+                         'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics', 'analytics-dashboard',
+                         'clips', 'clips-system', 'wallet', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
                          'marketplace', 'auctionhouse', 'livestudio', 'referrals', 'terms', 'privacy'];
       
       // If on any other invalid page → go to dashboard
@@ -338,7 +341,10 @@ function AppContent() {
         case 'tournaments': return <Tournaments />;
         case 'ranked': return <RankedLeaderboard />;
         case 'analytics': return <Analytics />;
+        case 'analytics-dashboard': return <AnalyticsDashboard />;
         case 'clips': return <Clips />;
+        case 'clips-system': return <ClipsSystem />;
+        case 'wallet': return <StripeIntegration />;
         case 'gamelibrary': return <GameLibrary />;
         case 'tokeneconomy': return <TokenEconomy />;
         case 'adminrevenue': return <AdminRevenue />;
