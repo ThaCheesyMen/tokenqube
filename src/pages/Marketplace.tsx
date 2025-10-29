@@ -5,11 +5,13 @@ import {
   ShoppingBag, Plus, Search, Filter, TrendingUp, Star, 
   Heart, Eye, Tag, DollarSign, Shield, Package, Clock,
   AlertCircle, CheckCircle, X, Coins, Grid, List, ChevronDown,
-  Sparkles, Award, MessageSquare, ExternalLink, Image as ImageIcon
+  Sparkles, Award, MessageSquare, ExternalLink, Image as ImageIcon,
+  Gavel, ArrowLeftRight, Timer
 } from 'lucide-react';
 import { toast } from '../components/Toast';
 import { formatTokens } from '../utils/formatTokens';
 import MarketplaceImageUpload from '../components/MarketplaceImageUpload';
+import TradeSystem from '../components/TradeSystem';
 
 interface MarketplaceItem {
   id: string;
@@ -64,6 +66,8 @@ export default function Marketplace() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [marketMode, setMarketMode] = useState<'marketplace' | 'auctions' | 'trades'>('marketplace');
+  const [showTradeModal, setShowTradeModal] = useState(false);
   
   const [filters, setFilters] = useState<MarketplaceFilters>({
     search: '',
@@ -397,16 +401,67 @@ export default function Marketplace() {
           </h1>
           <p className="text-gray-400">Buy and sell gaming items securely</p>
         </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowTradeModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#0f0f0f] hover:bg-[#2f3136] text-white rounded-lg font-semibold transition-colors border border-[#202225]"
+          >
+            <ArrowLeftRight className="w-5 h-5" />
+            Trade
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg font-semibold transition-all transform hover:scale-105"
+          >
+            <Plus className="w-5 h-5" />
+            List Item
+          </button>
+        </div>
+      </div>
+
+      {/* Mode Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-[#202225] pb-2">
         <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg font-semibold transition-all transform hover:scale-105"
+          onClick={() => setMarketMode('marketplace')}
+          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all rounded-t-lg ${
+            marketMode === 'marketplace'
+              ? 'bg-[#8B5CF6] text-white'
+              : 'text-gray-400 hover:text-gray-300 hover:bg-[#1a1a1a]'
+          }`}
         >
-          <Plus className="w-5 h-5" />
-          List Item
+          <ShoppingBag className="w-5 h-5" />
+          Marketplace
+        </button>
+        <button
+          onClick={() => setMarketMode('auctions')}
+          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all rounded-t-lg ${
+            marketMode === 'auctions'
+              ? 'bg-[#8B5CF6] text-white'
+              : 'text-gray-400 hover:text-gray-300 hover:bg-[#1a1a1a]'
+          }`}
+        >
+          <Gavel className="w-5 h-5" />
+          Auctions
+        </button>
+        <button
+          onClick={() => setMarketMode('trades')}
+          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all rounded-t-lg ${
+            marketMode === 'trades'
+              ? 'bg-[#8B5CF6] text-white'
+              : 'text-gray-400 hover:text-gray-300 hover:bg-[#1a1a1a]'
+          }`}
+        >
+          <ArrowLeftRight className="w-5 h-5" />
+          Trades
         </button>
       </div>
 
-      {/* Filters Bar */}
+      {/* Filters Bar (only for marketplace) */}
+      {marketMode === 'marketplace' && (
+        <>
+</invoke>
+<invoke name="grep">
+<parameter name="pattern">{/\* Items Grid/List \*/}
       <div className="bg-[#1a1a1a] rounded-xl p-4 mb-6 border border-[#202225]">
         <div className="flex flex-wrap items-center gap-4">
           {/* Search */}
@@ -524,14 +579,14 @@ export default function Marketplace() {
         )}
       </div>
 
-      {/* Items Grid/List */}
-      {loading ? (
+      {/* Items Grid/List (only for marketplace mode) */}
+      {marketMode === 'marketplace' && loading ? (
         <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'} gap-4`}>
           {[...Array(8)].map((_, i) => (
             <div key={i} className="animate-pulse bg-[#1a1a1a] rounded-xl h-64"></div>
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : marketMode === 'marketplace' && items.length === 0 ? (
         <div className="text-center py-16">
           <Package className="w-24 h-24 mx-auto mb-4 text-gray-600" />
           <h3 className="text-2xl font-bold text-white mb-2">No Items Found</h3>
@@ -543,7 +598,7 @@ export default function Marketplace() {
             List Your First Item
           </button>
         </div>
-      ) : viewMode === 'grid' ? (
+      ) : marketMode === 'marketplace' && viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {items.map((item) => (
             <div
@@ -654,7 +709,7 @@ export default function Marketplace() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : marketMode === 'marketplace' ? (
         // List View
         <div className="space-y-3">
           {items.map((item) => (
@@ -752,6 +807,33 @@ export default function Marketplace() {
               </div>
             </div>
           ))}
+        </div>
+      ) : null}
+        </>
+      )}
+
+      {/* Auctions Tab */}
+      {marketMode === 'auctions' && (
+        <div className="min-h-[600px]">
+          <p className="text-center text-gray-400 py-12">
+            🔨 Auction House - Coming Soon!
+            <br />
+            <span className="text-sm">Bid on exclusive items or set up your own auctions</span>
+          </p>
+        </div>
+      )}
+
+      {/* Trades Tab */}
+      {marketMode === 'trades' && (
+        <TradeSystem />
+      )}
+
+      {/* Trade Modal */}
+      {showTradeModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setShowTradeModal(false)}>
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <TradeSystem onClose={() => setShowTradeModal(false)} />
+          </div>
         </div>
       )}
 
