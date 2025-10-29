@@ -38,6 +38,8 @@ interface User {
   ban_reason?: string;
   created_at: string;
   last_active_at: string;
+  is_online?: boolean;
+  last_heartbeat?: string;
 }
 
 export default function AdminPanel({ onNavigate }: AdminPanelProps) {
@@ -111,7 +113,7 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     try {
       let query = supabase
         .from('profiles')
-        .select('id, username, email, role, token_balance, is_banned, ban_reason, created_at, last_active_at')
+        .select('id, username, email, role, token_balance, is_banned, ban_reason, created_at, last_active_at, is_online, last_heartbeat')
         .order('created_at', { ascending: false });
 
       if (search) {
@@ -451,10 +453,20 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                               <XCircle className="w-4 h-4 text-red-500" />
                               <span className="text-red-400 text-sm font-semibold">Banned</span>
                             </div>
+                          ) : user.is_online ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-green-400 text-sm font-semibold">Online</span>
+                            </div>
                           ) : (
                             <div className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                              <span className="text-green-400 text-sm font-semibold">Active</span>
+                              <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                              <span className="text-gray-400 text-sm">Offline</span>
+                              {user.last_heartbeat && (
+                                <span className="text-xs text-gray-500">
+                                  {new Date(user.last_heartbeat).toLocaleDateString()}
+                                </span>
+                              )}
                             </div>
                           )}
                         </td>

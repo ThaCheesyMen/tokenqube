@@ -123,13 +123,28 @@ function AppContent() {
       setCurrentPage('overlay');
     };
 
+    // Handle browser back/forward button navigation
+    const handlePopState = () => {
+      if (user) {
+        // If user is logged in and tries to go back to landing page, redirect to dashboard
+        const hash = window.location.hash.slice(2);
+        if (hash === 'landing' || hash === 'home' || hash === '' || hash === '/') {
+          console.log('🚫 Preventing logged-in user from accessing landing page via back button');
+          setCurrentPage('dashboard');
+          window.location.hash = '#/dashboard';
+        }
+      }
+    };
+
     window.addEventListener('navigateToChat', handleNavigateToChat);
     window.addEventListener('navigate-overlay', handleOverlayNav);
+    window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('navigateToChat', handleNavigateToChat);
       window.removeEventListener('navigate-overlay', handleOverlayNav);
+      window.removeEventListener('popstate', handlePopState);
     };
-  }, []);
+  }, [user]);
 
   // Keyboard shortcuts
   useEffect(() => {

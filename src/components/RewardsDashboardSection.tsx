@@ -38,10 +38,12 @@ export default function RewardsDashboardSection() {
     if (!profile) return;
 
     try {
-      const now = new Date();
-      const todayStart = new Date(now.setHours(0, 0, 0, 0));
-      const weekStart = new Date(now.setDate(now.getDate() - 7));
-      const monthStart = new Date(now.setDate(now.getDate() - 30));
+      // Fix: Don't mutate the same Date object
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const monthStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
       // Fetch transactions for different periods
       const [todayData, weekData, monthData, profileData] = await Promise.all([

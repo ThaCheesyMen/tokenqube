@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-// Build: 2025-10-29 20:30 - v1.2.1 - CRITICAL FIX - Stale chunks, token subscriptions
+// Build: 2025-10-29 21:00 - v1.2.2 - FIX ALL CONSOLE ERRORS + Admin improvements
 export default defineConfig({
   plugins: [
     react(),
