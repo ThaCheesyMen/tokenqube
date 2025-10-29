@@ -62,13 +62,18 @@ function AppContent() {
   // Set initial page based on platform and URL hash
   const [currentPage, setCurrentPage] = useState(() => {
     if (isElectron()) {
+      console.log('🖥️ Electron detected - starting at auth');
       return 'auth';
     }
     // Check URL hash for initial route
     const hash = window.location.hash.slice(2); // Remove '#/' or '#'
+    console.log('🌐 Web detected - Hash:', window.location.hash, 'Parsed:', hash);
+    
     if (hash === 'landing' || hash === 'home' || hash === '' || hash === '/') {
+      console.log('✅ Initial page set to: home (landing page)');
       return 'home';
     }
+    console.log('📍 Initial page set to:', hash || 'home');
     return hash || 'home';
   });
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'warning' | 'info'; message: string }>>([]);
@@ -156,8 +161,18 @@ function AppContent() {
 
   // If not logged in, show appropriate page based on platform and current route
   if (!user) {
+    // Debug logging
+    console.log('🔍 Landing Page Debug:', {
+      user: user ? 'LOGGED IN' : 'NOT LOGGED IN',
+      currentPage,
+      isElectron: isElectron(),
+      hash: window.location.hash,
+      shouldShowLanding: (currentPage === 'home' || currentPage === 'landing') && !isElectron()
+    });
+
     // Landing page routes (only for web)
     if ((currentPage === 'home' || currentPage === 'landing') && !isElectron()) {
+      console.log('✅ Showing Landing Page!');
       return (
         <Suspense fallback={<LoadingSkeleton />}>
           <Landing onNavigate={handlePageChange} />
@@ -192,8 +207,12 @@ function AppContent() {
     }
 
     // For all other cases (including Electron), show Auth
+    console.log('❌ Not showing Landing - Showing Auth instead. CurrentPage:', currentPage);
     return <Auth />;
   }
+
+  // User is logged in
+  console.log('👤 User is logged in, currentPage:', currentPage);
 
   // Special handling for overlay mode - fullscreen transparent with floating widgets
   if (currentPage === 'overlay') {
