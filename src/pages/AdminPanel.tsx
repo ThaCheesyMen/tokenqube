@@ -23,7 +23,7 @@ interface PlatformStats {
   total_tokens_earned: number;
   total_tokens_spent: number;
   total_tokens_in_circulation: number;
-  marketplace_transactions: number;
+  marketplace_sales: number;
   pending_withdrawals: number;
   total_revenue: number;
   users_by_role?: Record<string, number>;
@@ -77,7 +77,7 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     total_tokens_earned: 0,
     total_tokens_spent: 0,
     total_tokens_in_circulation: 0,
-    marketplace_transactions: 0,
+    marketplace_sales: 0,
     pending_withdrawals: 0,
     total_revenue: 0
   });
@@ -354,7 +354,7 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                   <Zap className="w-5 h-5 opacity-60" />
                 </div>
                 <div className="text-3xl font-bold mb-1">
-                  {(stats?.marketplace_transactions ?? 0).toLocaleString()}
+                  {(stats?.marketplace_sales ?? 0).toLocaleString()}
                 </div>
                 <div className="text-white/80 text-sm">Marketplace Sales</div>
                 <div className="mt-2 text-xs text-white/60">Completed transactions</div>
