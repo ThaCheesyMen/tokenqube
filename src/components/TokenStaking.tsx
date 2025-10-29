@@ -286,7 +286,7 @@ export default function TokenStaking() {
                     <div className="text-sm text-gray-400">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        Ends {new Date(stake.unlock_date).toLocaleDateString()}
+                        Ends {new Date(stake.unlock_date).toLocaleDateString()} 
                       </span>
                     </div>
                     <button

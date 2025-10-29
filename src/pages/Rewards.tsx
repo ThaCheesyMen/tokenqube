@@ -13,9 +13,10 @@ import GamingSessionsHistory from '../components/GamingSessionsHistory';
 import RewardsDashboardSection from '../components/RewardsDashboardSection';
 import DailyChallengesCard from '../components/DailyChallengesCard';
 import GamingSessionsWidget from '../components/GamingSessionsWidget';
-import QuestsWidget from '../components/QuestsWidget';
+import EnhancedQuestsWidget from '../components/EnhancedQuestsWidget';
 import TokenStakingWidget from '../components/TokenStakingWidget';
-import BuySellTokensWidget from '../components/BuySellTokensWidget';
+import QuickBuyTokensWidget from '../components/QuickBuyTokensWidget';
+import WithdrawTokensWidget from '../components/WithdrawTokensWidget';
 import AchievementsWidget from '../components/AchievementsWidget';
 import TransactionHistoryWidget from '../components/TransactionHistoryWidget';
 import ReferralsWidget from '../components/ReferralsWidget';
@@ -755,13 +756,20 @@ export default function Rewards() {
             {/* Row 1: Gaming & Quests */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <GamingSessionsWidget onViewAll={() => setActiveCategory('gamingsessions')} />
-              <QuestsWidget onViewAll={() => setActiveCategory('quests')} />
+              <EnhancedQuestsWidget onViewAll={() => setActiveCategory('quests')} />
             </div>
             
             {/* Row 2: Staking & Buy/Sell */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <TokenStakingWidget onViewAll={() => setActiveCategory('battlepass')} />
-              <BuySellTokensWidget onViewAll={() => setActiveCategory('buytokens')} />
+              <div className="space-y-6">
+                <QuickBuyTokensWidget onViewAll={() => setActiveCategory('buytokens')} />
+              </div>
+            </div>
+
+            {/* Row 2.5: Withdraw Tokens */}
+            <div className="grid grid-cols-1 gap-6">
+              <WithdrawTokensWidget onViewAll={() => setActiveCategory('buytokens')} />
             </div>
 
             {/* Row 3: Achievements & Transactions */}
