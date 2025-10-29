@@ -34,28 +34,20 @@ const AdminRevenue = lazy(() => import('./pages/AdminRevenue'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 import DiscordSidebar from './components/DiscordSidebar';
 import VoiceChatBar from './components/VoiceChatBar';
 import AchievementNotification from './components/AchievementNotification';
 import DailyLoginReward from './components/DailyLoginReward';
+import CookieConsent from './components/CookieConsent';
+import ErrorBoundary from './components/ErrorBoundary';
+import LoadingSpinner from './components/LoadingSpinner';
 import { ToastContainer, toast as toastManager } from './components/Toast';
 import { isElectron } from './utils/platform';
 
 // Loading skeleton component
-const LoadingSkeleton = () => (
-  <div className="h-full w-full p-4 sm:p-6 lg:p-8 bg-[#0f0f0f]">
-    <div className="animate-pulse space-y-4">
-      <div className="h-8 bg-[#1a1a1a] rounded w-1/4"></div>
-      <div className="h-4 bg-[#1a1a1a] rounded w-1/2"></div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-32 bg-[#1a1a1a] rounded-lg"></div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+const LoadingSkeleton = () => <LoadingSpinner fullScreen message="Loading QuestCord..." />;
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -255,7 +247,9 @@ function AppContent() {
         case 'adminpanel': return <AdminPanel onNavigate={handlePageChange} />;
         case 'terms': return <Terms />;
         case 'privacy': return <Privacy />;
-        default: return <Dashboard onNavigate={handlePageChange} />;
+        case '404':
+        case 'not-found': return <NotFound onNavigate={handlePageChange} />;
+        default: return <NotFound onNavigate={handlePageChange} />;
       }
     })();
 
@@ -290,19 +284,22 @@ function AppContent() {
       <AchievementNotification />
       <DailyLoginReward />
       <ToastContainer toasts={toasts} onClose={toastManager.close} />
+      <CookieConsent />
     </div>
   );
 }
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <VoiceChatProvider>
-          <AppContent />
-        </VoiceChatProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <VoiceChatProvider>
+            <AppContent />
+          </VoiceChatProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

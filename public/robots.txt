@@ -1,0 +1,21 @@
+# QuestCord - Robots.txt
+# https://questcord.app/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://questcord.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
