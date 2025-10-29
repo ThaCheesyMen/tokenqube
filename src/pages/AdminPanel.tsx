@@ -220,10 +220,11 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     }
 
     try {
-      const { error } = await supabase.rpc('update_user_role', {
-        p_user_id: selectedUser.id,
-        p_new_role: selectedRole
-      });
+      // Update role in profiles table directly (simpler approach)
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: selectedRole })
+        .eq('id', selectedUser.id);
 
       if (error) throw error;
 
