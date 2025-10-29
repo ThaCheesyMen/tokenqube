@@ -81,7 +81,11 @@ interface UserQuest {
   quest: Quest;
 }
 
-export default function Rewards() {
+interface RewardsProps {
+  onNavigate?: (page: string) => void;
+}
+
+export default function Rewards({ onNavigate }: RewardsProps = {}) {
   const { profile } = useAuth();
   const [tokenBalance, setTokenBalance] = useState(0);
   const [activeCategory, setActiveCategory] = useState<'earn' | 'achievements' | 'quests' | 'spend' | 'referrals' | 'battlepass' | 'transactions' | 'buytokens' | 'gamingsessions'>('earn');
@@ -764,8 +768,11 @@ export default function Rewards() {
               <TokenStakingWidget onViewAll={() => setActiveCategory('battlepass')} />
               <div className="space-y-6">
                 <QuickBuyTokensWidget onNavigate={() => {
-                  window.location.href = '#/enhanced-token-economy';
-                  setTimeout(() => window.location.reload(), 100);
+                  if (onNavigate) {
+                    onNavigate('enhanced-token-economy');
+                  } else {
+                    window.location.href = '/#/enhanced-token-economy';
+                  }
                 }} />
               </div>
             </div>
@@ -773,8 +780,11 @@ export default function Rewards() {
             {/* Row 2.5: Withdraw Tokens */}
             <div className="grid grid-cols-1 gap-6">
               <WithdrawTokensWidget onNavigate={() => {
-                window.location.href = '#/enhanced-token-economy';
-                setTimeout(() => window.location.reload(), 100);
+                if (onNavigate) {
+                  onNavigate('enhanced-token-economy');
+                } else {
+                  window.location.href = '/#/enhanced-token-economy';
+                }
               }} />
             </div>
 

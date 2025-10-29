@@ -327,7 +327,7 @@ function AppContent() {
         case 'livestudio': return <LiveStudio />;
         case 'marketplace': return <Marketplace />;
         case 'auctionhouse': return <AuctionHouse />;
-        case 'rewards': return <Rewards />;
+        case 'rewards': return <Rewards onNavigate={handlePageChange} />;
         case 'leaderboard': return <Leaderboard />;
         case 'referrals': return <Referrals />;
         case 'chat': return <Chat openDMData={openDMData} />;
