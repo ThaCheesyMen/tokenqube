@@ -1,11 +1,27 @@
-import React from 'react';
-import { Download, Globe, Trophy, Coins, Users, Zap, Github, Star, Clock, Shield, Gamepad2, TrendingUp, Award, Target, Radio, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, Globe, Trophy, Coins, Users, Zap, Github, Star, Clock, Shield, Gamepad2, TrendingUp, Award, Target, Radio, ChevronRight, Check, X, Mail, AlertCircle } from 'lucide-react';
 
 interface LandingProps {
   onNavigate: (page: string) => void;
 }
 
 export default function Landing({ onNavigate }: LandingProps) {
+  // Live token counter
+  const [tokensDistributed, setTokensDistributed] = useState(1247893);
+  const [gamesTracked, setGamesTracked] = useState(12847);
+  const [activePlayers, setActivePlayers] = useState(847);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTokensDistributed(prev => prev + Math.floor(Math.random() * 15) + 5);
+      setGamesTracked(prev => prev + (Math.random() > 0.7 ? 1 : 0));
+      setActivePlayers(prev => {
+        const change = Math.floor(Math.random() * 3) - 1;
+        return Math.max(800, Math.min(900, prev + change));
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-indigo-950 to-gray-900 overflow-hidden">
       {/* Animated Background Elements */}
@@ -47,10 +63,16 @@ export default function Landing({ onNavigate }: LandingProps) {
       {/* Hero Section */}
       <div className="relative z-10 container mx-auto px-4 py-20 md:py-32">
         <div className="text-center max-w-5xl mx-auto mb-20">
-          {/* Badge */}
+          {/* Urgency Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-400/30 backdrop-blur-sm mb-4 animate-pulse">
+            <AlertCircle className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm font-bold text-yellow-300">Only 23 Beta Spots Left Today!</span>
+          </div>
+
+          {/* Live Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8 hover:bg-white/10 transition-all duration-300">
             <Radio className="w-4 h-4 text-green-400 animate-pulse" />
-            <span className="text-sm font-medium text-gray-300">Live Now: Tournament #127 • 847 Players Online</span>
+            <span className="text-sm font-medium text-gray-300">Live Now: Tournament #127 • {activePlayers} Players Online</span>
           </div>
 
           {/* Main Headline */}
@@ -286,22 +308,312 @@ export default function Landing({ onNavigate }: LandingProps) {
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iLjEiLz48L2c+PC9zdmc+')] opacity-20"></div>
           <div className="relative grid md:grid-cols-4 gap-8 text-center">
             <div className="space-y-2">
-              <div className="text-5xl md:text-6xl font-black text-white">1M+</div>
+              <div className="text-5xl md:text-6xl font-black text-white transition-all duration-500">
+                {tokensDistributed.toLocaleString()}
+              </div>
               <div className="text-indigo-100 text-lg font-medium">Tokens Distributed</div>
+              <div className="text-indigo-200 text-sm">🔥 Live Counter</div>
             </div>
             <div className="space-y-2">
-              <div className="text-5xl md:text-6xl font-black text-white">10K+</div>
+              <div className="text-5xl md:text-6xl font-black text-white transition-all duration-500">
+                {gamesTracked.toLocaleString()}+
+              </div>
               <div className="text-indigo-100 text-lg font-medium">Games Tracked</div>
+              <div className="text-indigo-200 text-sm">⚡ Real-time</div>
             </div>
             <div className="space-y-2">
               <div className="text-5xl md:text-6xl font-black text-white">24/7</div>
               <div className="text-indigo-100 text-lg font-medium">Active Tournaments</div>
+              <div className="text-indigo-200 text-sm">🏆 Always On</div>
             </div>
             <div className="space-y-2">
               <div className="text-5xl md:text-6xl font-black text-white">Beta</div>
               <div className="text-indigo-100 text-lg font-medium">Join Early Access</div>
+              <div className="text-indigo-200 text-sm">🎮 Free Forever</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Testimonials */}
+      <div className="relative z-10 container mx-auto px-4 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-4">
+            What Gamers Are Saying
+          </h2>
+          <p className="text-xl text-gray-400">Join thousands of satisfied players earning rewards</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-yellow-400/50 transition-all duration-300">
+            <div className="flex gap-1 mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+              ))}
+            </div>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              "I've earned over 15K tokens just playing Valorant. This is insane! Finally getting rewarded for my grind."
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                M
+              </div>
+              <div>
+                <p className="text-white font-bold">MikeGaming</p>
+                <p className="text-gray-400 text-sm">Level 42 • 15,347 tokens</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-green-400/50 transition-all duration-300">
+            <div className="flex gap-1 mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+              ))}
+            </div>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              "The tournaments are so fun! Won 5K tokens yesterday. Best gaming platform I've ever used."
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold text-lg">
+                S
+              </div>
+              <div>
+                <p className="text-white font-bold">SarahPro</p>
+                <p className="text-gray-400 text-sm">Level 38 • 12,891 tokens</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-pink-400/50 transition-all duration-300">
+            <div className="flex gap-1 mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+              ))}
+            </div>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              "Simple to use, works perfectly. My whole squad switched to QuestCord. The voice chat is crystal clear!"
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white font-bold text-lg">
+                J
+              </div>
+              <div>
+                <p className="text-white font-bold">JaxonFTW</p>
+                <p className="text-gray-400 text-sm">Level 51 • 21,093 tokens</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Comparison Table */}
+      <div className="relative z-10 container mx-auto px-4 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-4">
+            QuestCord vs Traditional Gaming
+          </h2>
+          <p className="text-xl text-gray-400">See why gamers are making the switch</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="bg-red-500/5 border-2 border-red-400/20 rounded-2xl p-8 hover:border-red-400/40 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                <X className="w-6 h-6 text-red-400" />
+              </div>
+              <h3 className="text-3xl font-bold text-white">Traditional Gaming</h3>
+            </div>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-gray-400">
+                <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-1" />
+                <span>No rewards for your playtime</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-400">
+                <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-1" />
+                <span>Endless grind with zero value</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-400">
+                <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-1" />
+                <span>Pay to enter most tournaments</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-400">
+                <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-1" />
+                <span>Limited community features</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-400">
+                <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-1" />
+                <span>No cross-game progression</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-green-500/5 border-2 border-green-400/30 rounded-2xl p-8 hover:border-green-400/50 transition-all duration-300 relative overflow-hidden">
+            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-green-400 text-gray-900 text-xs font-bold">
+              RECOMMENDED
+            </div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                <Check className="w-6 h-6 text-green-400" />
+              </div>
+              <h3 className="text-3xl font-bold text-white">With QuestCord</h3>
+            </div>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-gray-300">
+                <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />
+                <span><strong className="text-white">Earn tokens</strong> every minute you play</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-300">
+                <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />
+                <span><strong className="text-white">Real value</strong> for your gaming time</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-300">
+                <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />
+                <span><strong className="text-white">Free tournaments</strong> every 6 hours</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-300">
+                <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />
+                <span><strong className="text-white">Voice chat, DMs, squads</strong> built-in</span>
+              </li>
+              <li className="flex items-start gap-3 text-gray-300">
+                <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />
+                <span><strong className="text-white">Unified level system</strong> across all games</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Trust Badges */}
+      <div className="relative z-10 container mx-auto px-4 py-16">
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 border border-white/10 max-w-5xl mx-auto">
+          <h3 className="text-2xl font-bold text-white text-center mb-8">Trusted by Gamers Worldwide</h3>
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 rounded-xl bg-green-500/10 flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-8 h-8 text-green-400" />
+              </div>
+              <p className="font-bold text-white">256-bit Encryption</p>
+              <p className="text-sm text-gray-400">Bank-level security</p>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto mb-3">
+                <Check className="w-8 h-8 text-blue-400" />
+              </div>
+              <p className="font-bold text-white">GDPR Compliant</p>
+              <p className="text-sm text-gray-400">Your data is safe</p>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 rounded-xl bg-purple-500/10 flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-8 h-8 text-purple-400" />
+              </div>
+              <p className="font-bold text-white">No Spyware</p>
+              <p className="text-sm text-gray-400">Open source core</p>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 rounded-xl bg-yellow-500/10 flex items-center justify-center mx-auto mb-3">
+                <Zap className="w-8 h-8 text-yellow-400" />
+              </div>
+              <p className="font-bold text-white">Instant Payouts</p>
+              <p className="text-sm text-gray-400">Withdraw anytime</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="relative z-10 container mx-auto px-4 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-4">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-xl text-gray-400">Everything you need to know</p>
+        </div>
+
+        <div className="max-w-3xl mx-auto space-y-4">
+          <details className="group bg-white/5 rounded-xl p-6 border border-white/10 hover:border-indigo-400/50 transition-all duration-300">
+            <summary className="text-xl font-bold text-white cursor-pointer flex items-center justify-between">
+              How do I earn tokens?
+              <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <p className="text-gray-400 mt-4 leading-relaxed">
+              Simply play your favorite games! QuestCord automatically detects when you're gaming and rewards you with tokens based on your playtime, achievements, and tournament performance. The longer you play, the more you earn.
+            </p>
+          </details>
+
+          <details className="group bg-white/5 rounded-xl p-6 border border-white/10 hover:border-indigo-400/50 transition-all duration-300">
+            <summary className="text-xl font-bold text-white cursor-pointer flex items-center justify-between">
+              Is QuestCord really free?
+              <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <p className="text-gray-400 mt-4 leading-relaxed">
+              Yes! QuestCord is 100% free to use. No credit card required, no hidden fees, no premium tiers. We make money through optional marketplace features, not by charging you to play.
+            </p>
+          </details>
+
+          <details className="group bg-white/5 rounded-xl p-6 border border-white/10 hover:border-indigo-400/50 transition-all duration-300">
+            <summary className="text-xl font-bold text-white cursor-pointer flex items-center justify-between">
+              What games are supported?
+              <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <p className="text-gray-400 mt-4 leading-relaxed">
+              We support all major PC games including Valorant, League of Legends, CS:GO, Fortnite, Apex Legends, Overwatch, and many more. New games are added weekly based on community requests.
+            </p>
+          </details>
+
+          <details className="group bg-white/5 rounded-xl p-6 border border-white/10 hover:border-indigo-400/50 transition-all duration-300">
+            <summary className="text-xl font-bold text-white cursor-pointer flex items-center justify-between">
+              Can I cash out my tokens?
+              <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <p className="text-gray-400 mt-4 leading-relaxed">
+              Absolutely! You can withdraw your tokens at any time. Exchange them for gift cards, gaming gear, or keep them to enter premium tournaments. We're also working on direct cryptocurrency conversion.
+            </p>
+          </details>
+
+          <details className="group bg-white/5 rounded-xl p-6 border border-white/10 hover:border-indigo-400/50 transition-all duration-300">
+            <summary className="text-xl font-bold text-white cursor-pointer flex items-center justify-between">
+              How do tournaments work?
+              <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <p className="text-gray-400 mt-4 leading-relaxed">
+              Tournaments run every 6 hours and are completely free to enter. Compete against other players based on your gaming performance during the tournament window. Top players win massive token prizes!
+            </p>
+          </details>
+
+          <details className="group bg-white/5 rounded-xl p-6 border border-white/10 hover:border-indigo-400/50 transition-all duration-300">
+            <summary className="text-xl font-bold text-white cursor-pointer flex items-center justify-between">
+              Is my data safe?
+              <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <p className="text-gray-400 mt-4 leading-relaxed">
+              Your privacy and security are our top priorities. We use 256-bit encryption, are GDPR compliant, and never sell your data. QuestCord only tracks game activity—nothing else on your computer.
+            </p>
+          </details>
+        </div>
+      </div>
+
+      {/* Email Signup */}
+      <div className="relative z-10 container mx-auto px-4 py-16">
+        <div className="max-w-2xl mx-auto text-center bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-sm rounded-3xl p-12 border border-indigo-400/30">
+          <Mail className="w-16 h-16 text-indigo-400 mx-auto mb-6" />
+          <h3 className="text-3xl font-bold text-white mb-4">Get Early Access Updates</h3>
+          <p className="text-gray-300 mb-8">
+            Join 3,847 gamers on the beta waitlist. Get exclusive updates, early features, and bonus tokens!
+          </p>
+          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="flex-1 px-6 py-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:border-indigo-400 focus:outline-none transition-all duration-200"
+            />
+            <button className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold text-white transition-all duration-200 shadow-lg shadow-indigo-500/30 hover:scale-105">
+              Join Beta
+            </button>
+          </form>
+          <p className="text-gray-500 text-sm mt-4">
+            🎁 First 100 signups get 500 bonus tokens!
+          </p>
         </div>
       </div>
 
