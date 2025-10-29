@@ -59,12 +59,17 @@ const LoadingSkeleton = () => (
 
 function AppContent() {
   const { user, loading } = useAuth();
-  // Set initial page based on platform: Electron starts at 'auth', Web starts at 'home' (landing)
+  // Set initial page based on platform and URL hash
   const [currentPage, setCurrentPage] = useState(() => {
     if (isElectron()) {
       return 'auth';
     }
-    return 'home';
+    // Check URL hash for initial route
+    const hash = window.location.hash.slice(2); // Remove '#/' or '#'
+    if (hash === 'landing' || hash === 'home' || hash === '' || hash === '/') {
+      return 'home';
+    }
+    return hash || 'home';
   });
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'warning' | 'info'; message: string }>>([]);
   const [openDMData, setOpenDMData] = useState<any>(null);
