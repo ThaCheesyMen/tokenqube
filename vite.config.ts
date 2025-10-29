@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
+// Build: 2025-10-29 - Landing Page V2 Deployment
 export default defineConfig({
   plugins: [
     react(),
@@ -18,5 +19,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    sourcemap: false,
   },
 });

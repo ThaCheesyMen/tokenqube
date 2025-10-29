@@ -1,7 +1,7 @@
 {
   "name": "tokenqube",
-  "version": "1.0.0",
-  "description": "TokenQube - Gaming Rewards Platform",
+  "version": "1.0.1",
+  "description": "QuestCord - Gaming Rewards Platform",
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
