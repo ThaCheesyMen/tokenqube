@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background circle -->
+  <defs>
+    <linearGradient id="logo-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <circle cx="100" cy="100" r="90" fill="url(#logo-bg)"/>
+  
+  <!-- Lightning bolt with glow -->
+  <g filter="url(#glow)">
+    <path d="M 110 40 L 70 100 L 100 100 L 90 160 L 140 90 L 110 90 Z" 
+          fill="#FACC15" 
+          stroke="#FEF3C7" 
+          stroke-width="3"
+          stroke-linejoin="round"/>
+  </g>
+</svg>
+

@@ -1,7 +1,7 @@
 {
-  "name": "TokenQuest - Gaming Rewards Platform",
-  "short_name": "TokenQuest",
-  "description": "Earn tokens while gaming, compete on leaderboards, join tournaments, and trade in the marketplace",
+  "name": "QuestCord - Gaming Rewards Platform",
+  "short_name": "QuestCord",
+  "description": "Earn tokens while gaming, compete in tournaments, and dominate leaderboards",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f0f",
