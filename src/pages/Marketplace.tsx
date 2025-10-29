@@ -32,12 +32,12 @@ interface MarketplaceItem {
   seller?: {
     username: string;
     avatar_url?: string;
-  };
-  user_marketplace_stats?: {
-    average_rating: number;
-    total_reviews: number;
-    verified_seller: boolean;
-    seller_tier: string;
+    user_marketplace_stats?: Array<{
+      average_rating: number;
+      total_reviews: number;
+      verified_seller: boolean;
+      seller_tier: string;
+    }>;
   };
   is_favorited?: boolean;
 }
@@ -100,8 +100,11 @@ export default function Marketplace() {
         .from('marketplace_items')
         .select(`
           *,
-          seller:profiles!marketplace_items_seller_id_fkey(username, avatar_url),
-          user_marketplace_stats!left(average_rating, total_reviews, verified_seller, seller_tier)
+          seller:profiles!marketplace_items_seller_id_fkey(
+            username, 
+            avatar_url,
+            user_marketplace_stats(average_rating, total_reviews, verified_seller, seller_tier)
+          )
         `)
         .eq('status', 'active');
 
@@ -613,12 +616,12 @@ export default function Marketplace() {
                 )}
 
                 {/* Seller Info */}
-                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-3">
                   <div className="w-6 h-6 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white text-xs font-bold">
                     {item.seller?.username?.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-sm text-gray-400">{item.seller?.username}</span>
-                  {item.user_marketplace_stats?.verified_seller && (
+                  {item.seller?.user_marketplace_stats?.[0]?.verified_seller && (
                     <CheckCircle className="w-4 h-4 text-blue-500" />
                   )}
                 </div>
@@ -632,16 +635,16 @@ export default function Marketplace() {
                       {formatTokens(item.price_tokens)}
                     </p>
                   </div>
-                  {item.user_marketplace_stats && (
+                  {item.seller?.user_marketplace_stats?.[0] && (
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-yellow-500">
                         <Star className="w-4 h-4 fill-yellow-500" />
                         <span className="font-semibold">
-                          {item.user_marketplace_stats.average_rating.toFixed(1)}
+                          {item.seller.user_marketplace_stats[0].average_rating.toFixed(1)}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500">
-                        ({item.user_marketplace_stats.total_reviews} reviews)
+                        ({item.seller.user_marketplace_stats[0].total_reviews} reviews)
                       </p>
                     </div>
                   )}
@@ -713,11 +716,11 @@ export default function Marketplace() {
                       </div>
                       <div>
                         <p className="text-sm text-white">{item.seller?.username}</p>
-                        {item.user_marketplace_stats && (
+                        {item.seller?.user_marketplace_stats?.[0] && (
                           <div className="flex items-center gap-1 text-xs">
                             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                             <span className="text-gray-400">
-                              {item.user_marketplace_stats.average_rating.toFixed(1)} ({item.user_marketplace_stats.total_reviews})
+                              {item.seller.user_marketplace_stats[0].average_rating.toFixed(1)} ({item.seller.user_marketplace_stats[0].total_reviews})
                             </span>
                           </div>
                         )}
@@ -1091,41 +1094,39 @@ export default function Marketplace() {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="text-white font-semibold">{selectedItem.seller?.username}</p>
-                          {selectedItem.user_marketplace_stats?.verified_seller && (
+                          {selectedItem.seller?.user_marketplace_stats?.[0]?.verified_seller && (
                             <CheckCircle className="w-4 h-4 text-blue-500" />
                           )}
                         </div>
-                        {selectedItem.user_marketplace_stats && (
+                        {selectedItem.seller?.user_marketplace_stats?.[0] && (
                           <div className="flex items-center gap-1 text-sm">
                             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                             <span className="text-white font-semibold">
-                              {selectedItem.user_marketplace_stats.average_rating.toFixed(1)}
+                              {selectedItem.seller.user_marketplace_stats[0].average_rating.toFixed(1)}
                             </span>
                             <span className="text-gray-400">
-                              ({selectedItem.user_marketplace_stats.total_reviews} reviews)
+                              ({selectedItem.seller.user_marketplace_stats[0].total_reviews} reviews)
                             </span>
                           </div>
                         )}
                       </div>
                     </div>
                     
-                    {selectedItem.user_marketplace_stats && (
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <p className="text-gray-400">Seller Tier</p>
-                          <p className="text-white font-semibold capitalize flex items-center gap-1">
-                            {(() => {
-                              const badge = getTierBadge(selectedItem.user_marketplace_stats.seller_tier);
-                              const Icon = badge.icon;
-                              return (
-                                <>
-                                  <Icon className="w-4 h-4" />
-                                  {selectedItem.user_marketplace_stats.seller_tier}
-                                </>
-                              );
-                            })()}
-                          </p>
-                        </div>
+                    {selectedItem.seller?.user_marketplace_stats?.[0] && (
+                      <div className="flex items-center justify-center gap-2 text-sm pt-3 border-t border-[#202225]">
+                        <p className="text-gray-400">Seller Tier:</p>
+                        <p className="text-white font-semibold capitalize flex items-center gap-1">
+                          {(() => {
+                            const badge = getTierBadge(selectedItem.seller.user_marketplace_stats[0].seller_tier);
+                            const Icon = badge.icon;
+                            return (
+                              <>
+                                <Icon className="w-4 h-4" />
+                                {selectedItem.seller.user_marketplace_stats[0].seller_tier}
+                              </>
+                            );
+                          })()}
+                        </p>
                       </div>
                     )}
                   </div>
