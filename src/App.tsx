@@ -35,6 +35,7 @@ const StripeIntegration = lazy(() => import('./pages/StripeIntegration'));
 const CryptoWallet = lazy(() => import('./pages/CryptoWallet'));
 const GameLibrary = lazy(() => import('./pages/GameLibrary'));
 const TokenEconomy = lazy(() => import('./pages/TokenEconomy'));
+const EnhancedTokenEconomy = lazy(() => import('./pages/EnhancedTokenEconomy'));
 const AdminRevenue = lazy(() => import('./pages/AdminRevenue'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const Terms = lazy(() => import('./pages/Terms'));
@@ -283,7 +284,7 @@ function AppContent() {
   const validLoggedInPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
                               'partyfinder', 'friends', 'squads', 'activity', 'friendactivity',
                               'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics',
-                              'clips', 'gamelibrary', 'tokeneconomy', 'adminpanel', 'adminrevenue', 
+                              'clips', 'gamelibrary', 'tokeneconomy', 'enhanced-token-economy', 'adminpanel', 'adminrevenue', 
                               'marketplace', 'livestudio', 'referrals', 'terms', 'privacy', 'overlay'];
   
   if (!validLoggedInPages.includes(currentPage)) {
@@ -349,6 +350,7 @@ function AppContent() {
         case 'crypto-wallet': return <CryptoWallet />;
         case 'gamelibrary': return <GameLibrary />;
         case 'tokeneconomy': return <TokenEconomy />;
+        case 'enhanced-token-economy': return <EnhancedTokenEconomy />;
         case 'adminrevenue': return <AdminRevenue />;
         case 'adminpanel': return <AdminPanel onNavigate={handlePageChange} />;
         case 'terms': return <Terms />;
