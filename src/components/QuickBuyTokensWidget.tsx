@@ -50,7 +50,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
                 ? 'border-green-500/50'
                 : 'border-[#202225]'
             }`}
-            onClick={onViewAll}
+            onClick={() => window.location.hash = '#/enhanced-token-economy'}
           >
             {pkg.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
