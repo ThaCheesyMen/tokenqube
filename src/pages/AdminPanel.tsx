@@ -5,7 +5,7 @@ import {
   Shield, Users, DollarSign, Activity, 
   AlertTriangle, CheckCircle, XCircle, Search,
   BarChart3, Zap, Unlock, Ban,
-  TrendingUp, Database, Server, Eye, Download, Coins
+  TrendingUp, Database, Server, Eye, Download, Coins, Newspaper, Plus, Edit, Trash2, Pin
 } from 'lucide-react';
 import { toast } from '../components/Toast';
 import { debounce } from '../utils/debounce';
@@ -42,10 +42,34 @@ interface User {
   last_heartbeat?: string;
 }
 
+interface NewsArticle {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  game_name?: string;
+  priority: string;
+  is_pinned: boolean;
+  is_published: boolean;
+  created_at: string;
+}
+
 export default function AdminPanel({ onNavigate }: AdminPanelProps) {
   const { isAdmin, role, loading: roleLoading } = useRole();
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'revenue' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'news' | 'revenue' | 'settings'>('overview');
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
+  const [showNewsModal, setShowNewsModal] = useState(false);
+  const [editingNews, setEditingNews] = useState<NewsArticle | null>(null);
+  const [newsForm, setNewsForm] = useState({
+    title: '',
+    content: '',
+    category: 'announcement',
+    game_name: '',
+    priority: 'normal',
+    is_pinned: false,
+    is_published: true,
+  });
   const [stats, setStats] = useState<PlatformStats>({
     total_users: 0,
     active_users_today: 0,

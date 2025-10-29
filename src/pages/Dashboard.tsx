@@ -4,12 +4,10 @@ import { supabase } from '../lib/supabase';
 import { Coins, TrendingUp, Gift, Users, Gamepad2, Mic, UserPlus, Trophy, Zap, Award, Copy } from 'lucide-react';
 import { ExtendedProfile } from '../types/profile';
 import GlobalChatWidget from '../components/GlobalChatWidget';
-import LiveStreamWidget from '../components/LiveStreamWidget';
 import TrendingGamesWidget from '../components/TrendingGamesWidget';
 import { DailyQuestsWidget, ActivityStreakWidget, RecentActivityWidget, FriendsOnlineWidget } from '../components/DashboardWidgets';
 import { calculateLevel, getTier } from '../utils/levelSystem';
 import ActiveSessionTracker from '../components/ActiveSessionTracker';
-import NotificationsWidget from '../components/NotificationsWidget';
 import QuickGameLaunchWidget from '../components/QuickGameLaunchWidget';
 import VoiceChatStatusWidget from '../components/VoiceChatStatusWidget';
 import TournamentsWidget from '../components/TournamentsWidget';
@@ -422,11 +420,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Live Streaming Widget */}
-            <CollapsibleWidget id="live-stream">
-              <LiveStreamWidget onNavigate={onNavigate} />
-            </CollapsibleWidget>
-
             {/* News Feed */}
             <CollapsibleWidget id="news-feed">
               <DashboardNewsFeed />
@@ -435,11 +428,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             {/* AI Recommendations */}
             <CollapsibleWidget id="ai-recommendations">
               <AIRecommendationsWidget />
-            </CollapsibleWidget>
-
-            {/* Notifications Widget */}
-            <CollapsibleWidget id="notifications">
-              <NotificationsWidget onNavigate={onNavigate} />
             </CollapsibleWidget>
 
             {/* Tournaments & Events */}

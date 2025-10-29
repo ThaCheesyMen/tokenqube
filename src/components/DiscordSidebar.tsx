@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { formatTokens } from '../utils/formatTokens';
+import GlobalNotificationsBell from './GlobalNotificationsBell';
 
 interface DiscordSidebarProps {
   currentPage: string;
@@ -83,21 +84,24 @@ export default function DiscordSidebar({ currentPage, onNavigate, onCollapseChan
         } ${showMobileMenu ? '' : 'hidden lg:block'}`}
       >
         <div className="flex flex-col h-full">
-          {/* Collapse Button */}
-          <div className={`p-4 border-b border-[#202225] flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+          {/* Header with Collapse Button & Notifications */}
+          <div className={`p-4 border-b border-[#202225] flex items-center ${isCollapsed ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
             {!isCollapsed && (
               <div className="flex items-center space-x-2">
                 <Coins className="w-8 h-8 text-[#8B5CF6]" />
                 <span className="text-xl font-bold">TokenQuest</span>
               </div>
             )}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2 hover:bg-[#2f3136] rounded-lg transition-colors"
-              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            >
-              <ChevronLeft className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
-            </button>
+            <div className={`flex items-center gap-2 ${isCollapsed ? 'flex-col' : ''}`}>
+              <GlobalNotificationsBell />
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="p-2 hover:bg-[#2f3136] rounded-lg transition-colors"
+                title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              >
+                <ChevronLeft className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
           </div>
 
           {/* Main Navigation */}

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
   Newspaper, 
   FileText, 
@@ -25,22 +26,53 @@ interface NewsItem {
 }
 
 export default function DashboardNewsFeed() {
-  // Static news item - Battlefield 6 announcement
-  const [news] = useState<NewsItem[]>([
-    {
-      id: '1',
-      title: 'Battlefield 6 Season 1 Starts October 28th',
-      content: 'Get ready for Season 1: Tactical Warfare! New maps, weapons, specialists, and exclusive battle pass rewards. Mark your calendars for October 28th!',
-      category: 'announcement',
-      game_name: 'Battlefield 6',
-      priority: 'normal',
-      is_pinned: false,
-      views: 0,
-      created_at: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString() // 7 hours ago
-    }
-  ]);
-  const [loading] = useState(false);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+
+  useEffect(() => {
+    fetchNews();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('news_articles_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'news_articles',
+        },
+        () => {
+          fetchNews();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchNews = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select('*')
+        .eq('is_published', true)
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setNews(data || []);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
