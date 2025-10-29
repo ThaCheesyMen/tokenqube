@@ -11,6 +11,7 @@ import { toast } from '../components/Toast';
 import { debounce } from '../utils/debounce';
 import RoleBadge from '../components/RoleBadge';
 import { formatTokens } from '../utils/formatTokens';
+import NewsManagementPanel from '../components/NewsManagementPanel';
 
 interface AdminPanelProps {
   onNavigate?: (page: string) => void;
@@ -297,6 +298,19 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
             </div>
           </button>
           <button
+            onClick={() => setActiveTab('news')}
+            className={`px-6 py-3 font-semibold transition ${
+              activeTab === 'news'
+                ? 'text-white border-b-2 border-[#8B5CF6]'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Newspaper className="w-5 h-5" />
+              News Management
+            </div>
+          </button>
+          <button
             onClick={handleViewRevenue}
             className="px-6 py-3 font-semibold text-gray-400 hover:text-gray-300 transition"
           >
@@ -530,6 +544,13 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* News Management Tab */}
+        {activeTab === 'news' && (
+          <div>
+            <NewsManagementPanel />
           </div>
         )}
       </div>

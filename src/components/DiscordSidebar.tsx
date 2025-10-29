@@ -1,6 +1,7 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { useRealtimeTokenBalance } from '../hooks/useRealtimeTokenBalance';
+import { supabase } from '../lib/supabase';
 import { 
   Coins, LayoutDashboard, MessageSquare, 
   Trophy, FolderOpen, LogOut, Menu, X, ChevronLeft, ShoppingBag, Radio, 
@@ -28,9 +29,71 @@ export default function DiscordSidebar({ currentPage, onNavigate, onCollapseChan
   const { isAdmin } = useRole();
   const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed like Discord
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   
   // Real-time token updates - sidebar shows live balance!
   useRealtimeTokenBalance();
+
+  // Track unread chat messages
+  useEffect(() => {
+    if (!profile) return;
+
+    // Subscribe to new global chat messages
+    const globalChatChannel = supabase
+      .channel('global_chat_unread')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'global_chat_messages',
+        },
+        (payload) => {
+          // Don't count own messages
+          if (payload.new.user_id !== profile.id) {
+            setUnreadChatCount(prev => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to new DM messages
+    const dmChannel = supabase
+      .channel('dm_messages_unread')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dm_messages',
+        },
+        async (payload) => {
+          // Check if message is for this user
+          const { data: room } = await supabase
+            .from('dm_rooms')
+            .select('user1_id, user2_id')
+            .eq('id', payload.new.room_id)
+            .single();
+
+          if (room && (room.user1_id === profile.id || room.user2_id === profile.id) && payload.new.sender_id !== profile.id) {
+            setUnreadChatCount(prev => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(globalChatChannel);
+      supabase.removeChannel(dmChannel);
+    };
+  }, [profile]);
+
+  // Clear unread count when navigating to chat
+  useEffect(() => {
+    if (currentPage === 'chat') {
+      setUnreadChatCount(0);
+    }
+  }, [currentPage]);
 
   // Notify parent component when collapse state changes
   useEffect(() => {
@@ -132,10 +195,18 @@ export default function DiscordSidebar({ currentPage, onNavigate, onCollapseChan
                     onNavigate(item.id);
                     setShowMobileMenu(false);
                   }}
-                  className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2.5 rounded-lg transition-all group ${buttonClass}`}
+                  className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2.5 rounded-lg transition-all group ${buttonClass} relative`}
                   title={isCollapsed ? item.name : ''}
                 >
-                  {renderIcon(Icon, isActive, item.id)}
+                  <div className="relative">
+                    {renderIcon(Icon, isActive, item.id)}
+                    {/* Unread chat badge */}
+                    {item.id === 'chat' && unreadChatCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center animate-pulse px-1">
+                        {unreadChatCount > 9 ? '9+' : unreadChatCount}
+                      </span>
+                    )}
+                  </div>
                   {!isCollapsed && <span className="font-medium">{item.name}</span>}
                 </button>
               );

@@ -283,7 +283,7 @@ export default function GlobalNotificationsBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-[#2f3136] border border-[#202225] rounded-lg shadow-2xl z-50 max-h-[600px] flex flex-col">
+        <div className="fixed left-24 top-20 w-96 bg-[#2f3136] border border-[#202225] rounded-lg shadow-2xl z-[9999] max-h-[600px] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-[#202225]">
             <div className="flex items-center gap-2">
