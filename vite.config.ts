@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-// Build: 2025-10-29 - Landing Page V2 Deployment
+// Build: 2025-10-29 18:00 - v1.0.3 - Service Worker Cache Fix
 export default defineConfig({
   plugins: [
     react(),
@@ -20,5 +20,15 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        // Use consistent chunk naming to help with caching
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'supabase': ['@supabase/supabase-js'],
+          'ui': ['lucide-react', 'recharts']
+        }
+      }
+    }
   },
 });

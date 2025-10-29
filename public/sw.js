@@ -1,5 +1,5 @@
 // Service Worker for TokenQuest PWA
-const CACHE_NAME = 'tokenquest-v1';
+const CACHE_NAME = 'questcord-v1.0.3'; // Updated cache version to clear old chunks
 const urlsToCache = [
   '/',
   '/index.html',
@@ -36,7 +36,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Network first for JS/CSS chunks, cache for static assets
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
@@ -46,6 +46,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first for JS/CSS chunks (to avoid stale chunk errors)
+  if (event.request.url.includes('/assets/') && 
+      (event.request.url.endsWith('.js') || event.request.url.endsWith('.css'))) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Cache the new version
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache if network fails
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Cache-first for everything else
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -73,7 +95,7 @@ self.addEventListener('fetch', (event) => {
 
           return response;
         }).catch(() => {
-          // Offline fallback - could return a custom offline page here
+          // Offline fallback
           return new Response('Offline - Please check your connection', {
             status: 503,
             statusText: 'Service Unavailable',
