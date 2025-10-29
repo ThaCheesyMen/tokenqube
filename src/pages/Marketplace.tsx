@@ -12,6 +12,7 @@ import { toast } from '../components/Toast';
 import { formatTokens } from '../utils/formatTokens';
 import MarketplaceImageUpload from '../components/MarketplaceImageUpload';
 import TradeSystem from '../components/TradeSystem';
+import AuctionHouseIntegrated from '../components/AuctionHouseIntegrated';
 
 interface MarketplaceItem {
   id: string;
@@ -459,10 +460,7 @@ export default function Marketplace() {
       {/* Filters Bar (only for marketplace) */}
       {marketMode === 'marketplace' && (
         <>
-</invoke>
-<invoke name="grep">
-<parameter name="pattern">{/\* Items Grid/List \*/}
-      <div className="bg-[#1a1a1a] rounded-xl p-4 mb-6 border border-[#202225]">
+        <div className="bg-[#1a1a1a] rounded-xl p-4 mb-6 border border-[#202225]">
         <div className="flex flex-wrap items-center gap-4">
           {/* Search */}
           <div className="flex-1 min-w-[250px]">
@@ -814,13 +812,7 @@ export default function Marketplace() {
 
       {/* Auctions Tab */}
       {marketMode === 'auctions' && (
-        <div className="min-h-[600px]">
-          <p className="text-center text-gray-400 py-12">
-            🔨 Auction House - Coming Soon!
-            <br />
-            <span className="text-sm">Bid on exclusive items or set up your own auctions</span>
-          </p>
-        </div>
+        <AuctionHouseIntegrated />
       )}
 
       {/* Trades Tab */}
