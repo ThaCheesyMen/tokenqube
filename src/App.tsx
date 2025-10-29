@@ -78,6 +78,23 @@ function AppContent() {
     return () => unsubscribe();
   }, []);
 
+  // Auto-redirect to dashboard after login
+  useEffect(() => {
+    if (user && !loading) {
+      // If user just logged in and we're not on a valid page, go to dashboard
+      const validPages = ['dashboard', 'rewards', 'leaderboard', 'chat', 'profile', 'settings', 
+                         'party-finder', 'friends', 'squads', 'activity', 'friend-activity',
+                         'transactions', 'battlepass', 'tournaments', 'ranked', 'analytics',
+                         'clips', 'games', 'token-economy', 'admin', 'admin-revenue', 'marketplace',
+                         'live-studio', 'referrals', 'terms', 'privacy'];
+      
+      if (!validPages.includes(currentPage) && currentPage !== 'overlay') {
+        console.log('🔄 User logged in - redirecting to dashboard from:', currentPage);
+        setCurrentPage('dashboard');
+      }
+    }
+  }, [user, loading]);
+
   useEffect(() => {
     // Listen for navigation to chat with DM data
     const handleNavigateToChat = () => {

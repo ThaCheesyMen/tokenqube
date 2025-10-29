@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-// Build: 2025-10-29 18:05 - v1.0.4 - FORCE FRESH BUILD
+// Build: 2025-10-29 18:10 - v1.0.6 - Fix login redirect to dashboard
 export default defineConfig({
   plugins: [
     react(),
