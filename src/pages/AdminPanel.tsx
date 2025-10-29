@@ -71,6 +71,11 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     is_pinned: false,
     is_published: true,
   });
+  
+  // Role assignment modal
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; username: string; currentRole: string } | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>('');
   const [stats, setStats] = useState<PlatformStats>({
     total_users: 0,
     active_users_today: 0,
@@ -199,28 +204,31 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     }
   };
 
-  const handleChangeRole = async (userId: string, username: string, currentRole: string) => {
-    const newRole = prompt(
-      `Change role for ${username}\nCurrent: ${currentRole}\n\nEnter new role (user, vip, moderator, support, developer, admin, super_admin):`
-    );
+  const handleChangeRole = (userId: string, username: string, currentRole: string) => {
+    setSelectedUser({ id: userId, username, currentRole });
+    setSelectedRole(currentRole);
+    setShowRoleModal(true);
+  };
 
-    if (!newRole) return;
+  const handleRoleSubmit = async () => {
+    if (!selectedUser || !selectedRole) return;
 
-    const validRoles = ['user', 'vip', 'moderator', 'support', 'developer', 'admin', 'super_admin'];
-    if (!validRoles.includes(newRole)) {
-      toast.error('Invalid role');
+    if (selectedRole === selectedUser.currentRole) {
+      toast.info('Role unchanged');
+      setShowRoleModal(false);
       return;
     }
 
     try {
       const { error } = await supabase.rpc('update_user_role', {
-        p_user_id: userId,
-        p_new_role: newRole
+        p_user_id: selectedUser.id,
+        p_new_role: selectedRole
       });
 
       if (error) throw error;
 
-      toast.success(`${username}'s role updated to ${newRole}`);
+      toast.success(`${selectedUser.username}'s role updated to ${selectedRole}`);
+      setShowRoleModal(false);
       fetchUsers();
     } catch (error: any) {
       console.error('Error updating role:', error);
@@ -554,6 +562,217 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
           </div>
         )}
       </div>
+
+      {/* Role Assignment Modal */}
+      {showRoleModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1a1a] rounded-xl border border-[#202225] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-[#202225]">
+              <div>
+                <h3 className="text-xl font-bold text-white">Change User Role</h3>
+                <p className="text-gray-400 text-sm mt-1">
+                  Assigning role to: <span className="text-white font-semibold">{selectedUser.username}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setShowRoleModal(false)}
+                className="p-2 hover:bg-[#2f3136] rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-400 mb-3">
+                  Current Role: <RoleBadge role={selectedUser.currentRole} size="sm" />
+                </label>
+                <p className="text-xs text-gray-500">Select a new role from the options below:</p>
+              </div>
+
+              {/* Role Options Grid */}
+              <div className="grid grid-cols-1 gap-3">
+                {/* User */}
+                <button
+                  onClick={() => setSelectedRole('user')}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedRole === 'user'
+                      ? 'border-[#8B5CF6] bg-[#8B5CF6]/10'
+                      : 'border-[#202225] hover:border-[#8B5CF6]/50 bg-[#0f0f0f]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <RoleBadge role="user" size="md" />
+                    {selectedRole === 'user' && (
+                      <CheckCircle className="w-5 h-5 text-[#8B5CF6]" />
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Standard user with basic platform access. Can use all gaming features, earn tokens, and participate in tournaments.
+                  </p>
+                </button>
+
+                {/* VIP */}
+                <button
+                  onClick={() => setSelectedRole('vip')}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedRole === 'vip'
+                      ? 'border-yellow-500 bg-yellow-500/10'
+                      : 'border-[#202225] hover:border-yellow-500/50 bg-[#0f0f0f]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <RoleBadge role="vip" size="md" />
+                    {selectedRole === 'vip' && (
+                      <CheckCircle className="w-5 h-5 text-yellow-500" />
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Premium member with enhanced benefits. Gets bonus token rewards, priority matchmaking, and exclusive cosmetics.
+                  </p>
+                </button>
+
+                {/* Moderator */}
+                <button
+                  onClick={() => setSelectedRole('moderator')}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedRole === 'moderator'
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-[#202225] hover:border-blue-500/50 bg-[#0f0f0f]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <RoleBadge role="moderator" size="md" />
+                    {selectedRole === 'moderator' && (
+                      <CheckCircle className="w-5 h-5 text-blue-500" />
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Community moderator. Can manage chat, warn/mute users, review reports, and maintain community guidelines.
+                  </p>
+                </button>
+
+                {/* Support */}
+                <button
+                  onClick={() => setSelectedRole('support')}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedRole === 'support'
+                      ? 'border-green-500 bg-green-500/10'
+                      : 'border-[#202225] hover:border-green-500/50 bg-[#0f0f0f]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <RoleBadge role="support" size="md" />
+                    {selectedRole === 'support' && (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Customer support agent. Can view user issues, process refunds, adjust token balances, and assist with technical problems.
+                  </p>
+                </button>
+
+                {/* Developer */}
+                <button
+                  onClick={() => setSelectedRole('developer')}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedRole === 'developer'
+                      ? 'border-cyan-500 bg-cyan-500/10'
+                      : 'border-[#202225] hover:border-cyan-500/50 bg-[#0f0f0f]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <RoleBadge role="developer" size="md" />
+                    {selectedRole === 'developer' && (
+                      <CheckCircle className="w-5 h-5 text-cyan-500" />
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Platform developer. Has technical access to debug tools, can view system logs, and test new features before release.
+                  </p>
+                </button>
+
+                {/* Admin */}
+                <button
+                  onClick={() => setSelectedRole('admin')}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedRole === 'admin'
+                      ? 'border-orange-500 bg-orange-500/10'
+                      : 'border-[#202225] hover:border-orange-500/50 bg-[#0f0f0f]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <RoleBadge role="admin" size="md" />
+                    {selectedRole === 'admin' && (
+                      <CheckCircle className="w-5 h-5 text-orange-500" />
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Platform administrator. Full access to admin panel, can manage users, view analytics, configure platform settings, and manage revenue.
+                  </p>
+                </button>
+
+                {/* Super Admin */}
+                <button
+                  onClick={() => setSelectedRole('super_admin')}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedRole === 'super_admin'
+                      ? 'border-red-500 bg-red-500/10'
+                      : 'border-[#202225] hover:border-red-500/50 bg-[#0f0f0f]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <RoleBadge role="super_admin" size="md" />
+                    {selectedRole === 'super_admin' && (
+                      <CheckCircle className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    ⚠️ Highest privilege level. Complete control over platform, including ability to grant admin roles and access sensitive data.
+                  </p>
+                </button>
+              </div>
+
+              {/* Warning for Super Admin */}
+              {selectedRole === 'super_admin' && (
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-400">
+                    <AlertTriangle className="w-5 h-5" />
+                    <span className="text-sm font-semibold">Warning: Super Admin Role</span>
+                  </div>
+                  <p className="text-red-300 text-xs mt-1">
+                    This role grants unrestricted access. Only assign to highly trusted individuals.
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-[#202225]">
+                <button
+                  onClick={handleRoleSubmit}
+                  disabled={selectedRole === selectedUser.currentRole}
+                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${
+                    selectedRole === selectedUser.currentRole
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#8B5CF6] hover:bg-[#7C3AED] text-white'
+                  }`}
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  {selectedRole === selectedUser.currentRole ? 'No Change' : 'Update Role'}
+                </button>
+                <button
+                  onClick={() => setShowRoleModal(false)}
+                  className="px-6 py-3 bg-[#2f3136] hover:bg-[#36393f] text-white rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
