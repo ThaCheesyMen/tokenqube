@@ -5,15 +5,10 @@ import { Wallet, TrendingUp, Bitcoin, ChevronRight, DollarSign, Clock, Shield } 
 import { toast } from './Toast';
 
 interface WithdrawTokensWidgetProps {
-  onViewAll: () => void;
+  onNavigate: () => void;
 }
 
-const handleNavigate = () => {
-  window.location.hash = '#/enhanced-token-economy';
-  window.dispatchEvent(new HashChangeEvent('hashchange'));
-};
-
-export default function WithdrawTokensWidget({ onViewAll }: WithdrawTokensWidgetProps) {
+export default function WithdrawTokensWidget({ onNavigate }: WithdrawTokensWidgetProps) {
   const { profile } = useAuth();
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
   const [showQuickWithdraw, setShowQuickWithdraw] = useState(false);
@@ -109,7 +104,7 @@ export default function WithdrawTokensWidget({ onViewAll }: WithdrawTokensWidget
           </div>
         </div>
           <button
-            onClick={handleNavigate}
+            onClick={onNavigate}
             className="flex items-center gap-1 px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg font-semibold transition-colors"
           >
             <span>View All</span>

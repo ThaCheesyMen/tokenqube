@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ShoppingCart, Coins, Sparkles, CreditCard, Bitcoin, ChevronRight } from 'lucide-react';
 
 interface QuickBuyTokensWidgetProps {
-  onViewAll: () => void;
+  onNavigate: () => void;
 }
 
 const QUICK_PACKAGES = [
@@ -11,13 +11,8 @@ const QUICK_PACKAGES = [
   { amount: 500000, price: 500, bonus: 50000, icon: '💎', popular: false }
 ];
 
-export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidgetProps) {
+export default function QuickBuyTokensWidget({ onNavigate }: QuickBuyTokensWidgetProps) {
   const [hoveredPackage, setHoveredPackage] = useState<number | null>(null);
-  
-  const handleNavigate = () => {
-    window.location.hash = '#/enhanced-token-economy';
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
-  };
 
   return (
     <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-2xl p-6 border border-[#202225] shadow-xl">
@@ -33,7 +28,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
           </div>
         </div>
           <button
-            onClick={handleNavigate}
+            onClick={onNavigate}
             className="flex items-center gap-1 px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg font-semibold transition-colors"
           >
             <span>View All</span>
@@ -87,7 +82,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
                 </p>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -115,7 +110,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
             </div>
           </div>
           <button
-            onClick={handleNavigate}
+            onClick={onNavigate}
             className="px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-500/20"
           >
             <Coins className="w-5 h-5" />
