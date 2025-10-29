@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from '../components/Toast';
 import { formatTokens } from '../utils/formatTokens';
+import MarketplaceImageUpload from '../components/MarketplaceImageUpload';
 
 interface MarketplaceItem {
   id: string;
@@ -920,6 +921,13 @@ export default function Marketplace() {
                   </select>
                 </div>
               </div>
+
+              {/* Images Upload */}
+              <MarketplaceImageUpload
+                images={newItem.images}
+                onChange={(images) => setNewItem({ ...newItem, images })}
+                maxImages={5}
+              />
 
               {/* Fee Information */}
               <div className="bg-[#0f0f0f] border border-[#202225] rounded-lg p-4">
