@@ -5,7 +5,7 @@ import {
   Shield, Users, DollarSign, Activity, 
   AlertTriangle, CheckCircle, XCircle, Search,
   BarChart3, Zap, Unlock, Ban,
-  TrendingUp, Database, Server, Eye, Download, Coins, Newspaper, Plus, Edit, Trash2, Pin
+  TrendingUp, Database, Server, Eye, Download, Coins, Newspaper, Plus, Edit, Trash2, Pin, X
 } from 'lucide-react';
 import { toast } from '../components/Toast';
 import { debounce } from '../utils/debounce';
