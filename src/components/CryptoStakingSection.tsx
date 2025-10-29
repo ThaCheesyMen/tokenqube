@@ -63,15 +63,22 @@ export default function CryptoStakingSection() {
   const fetchUserStakes = async () => {
     if (!profile) return;
 
-    const { data } = await supabase
+    console.log('Fetching stakes for user:', profile.id);
+    
+    const { data, error } = await supabase
       .from('crypto_staking')
       .select('*')
       .eq('user_id', profile.id)
       .order('staked_at', { ascending: false });
 
-    if (data) {
-      setUserStakes(data);
+    if (error) {
+      console.error('Error fetching stakes:', error);
+      toast.error('Failed to load stakes');
+      return;
     }
+
+    console.log('Stakes fetched:', data);
+    setUserStakes(data || []);
   };
 
   const calculateDailyTokens = (usdAmount: number, apy: number) => {
@@ -97,8 +104,9 @@ export default function CryptoStakingSection() {
     try {
       const tokensPerDay = calculateDailyTokens(amount, option?.apy || 10);
 
-      // Create staking record
-      const { error } = await supabase
+      // Create staking record with explicit timestamps
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
         .from('crypto_staking')
         .insert([{
           user_id: profile.id,
@@ -107,17 +115,28 @@ export default function CryptoStakingSection() {
           crypto_amount: `${amount} ${selectedCrypto}`,
           apy_rate: option?.apy || 10,
           tokens_per_day: tokensPerDay,
-          status: 'active'
-        }]);
+          status: 'active',
+          staked_at: now,
+          last_reward_at: now,
+          total_tokens_earned: 0
+        }])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Staking error:', error);
+        throw error;
+      }
 
-      toast.success(`Staked $${amount} ${selectedCrypto}! You'll earn ${tokensPerDay} tokens daily!`);
+      console.log('Stake created:', data);
+      toast.success(`✅ Staked $${amount} ${selectedCrypto}! Earning ${tokensPerDay} tokens daily!`);
       setStakingAmount('');
-      fetchUserStakes();
-    } catch (error) {
+      
+      // Refresh stakes list
+      await fetchUserStakes();
+    } catch (error: any) {
       console.error('Error staking:', error);
-      toast.error('Failed to create stake');
+      toast.error(error.message || 'Failed to create stake');
     } finally {
       setLoading(false);
     }
