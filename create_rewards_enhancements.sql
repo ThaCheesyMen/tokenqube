@@ -219,6 +219,20 @@ CREATE TABLE IF NOT EXISTS public.quest_templates (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Add missing columns if they don't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'quest_templates' AND column_name = 'sort_order') THEN
+        ALTER TABLE public.quest_templates ADD COLUMN sort_order INTEGER DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'quest_templates' AND column_name = 'cooldown_hours') THEN
+        ALTER TABLE public.quest_templates ADD COLUMN cooldown_hours INTEGER NOT NULL DEFAULT 24;
+    END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_quest_templates_is_active ON public.quest_templates(is_active);
 CREATE INDEX IF NOT EXISTS idx_quest_templates_sort_order ON public.quest_templates(sort_order);
 
