@@ -763,13 +763,19 @@ export default function Rewards() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <TokenStakingWidget onViewAll={() => setActiveCategory('battlepass')} />
               <div className="space-y-6">
-                <QuickBuyTokensWidget onViewAll={() => window.location.hash = '#/enhanced-token-economy'} />
+                <QuickBuyTokensWidget onViewAll={() => {
+                  window.location.hash = '#/enhanced-token-economy';
+                  window.dispatchEvent(new HashChangeEvent('hashchange'));
+                }} />
               </div>
             </div>
 
             {/* Row 2.5: Withdraw Tokens */}
             <div className="grid grid-cols-1 gap-6">
-              <WithdrawTokensWidget onViewAll={() => window.location.hash = '#/enhanced-token-economy'} />
+              <WithdrawTokensWidget onViewAll={() => {
+                window.location.hash = '#/enhanced-token-economy';
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+              }} />
             </div>
 
             {/* Row 3: Achievements & Transactions */}

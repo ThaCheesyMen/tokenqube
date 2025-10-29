@@ -8,6 +8,11 @@ interface WithdrawTokensWidgetProps {
   onViewAll: () => void;
 }
 
+const handleNavigate = () => {
+  window.location.hash = '#/enhanced-token-economy';
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+};
+
 export default function WithdrawTokensWidget({ onViewAll }: WithdrawTokensWidgetProps) {
   const { profile } = useAuth();
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
@@ -104,7 +109,7 @@ export default function WithdrawTokensWidget({ onViewAll }: WithdrawTokensWidget
           </div>
         </div>
           <button
-            onClick={() => window.location.hash = '#/enhanced-token-economy'}
+            onClick={handleNavigate}
             className="flex items-center gap-1 px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg font-semibold transition-colors"
           >
             <span>View All</span>

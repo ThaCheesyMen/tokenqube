@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ShoppingCart, Coins, Sparkles, CreditCard, Bitcoin, ChevronRight } from 'lucide-react';
+import { useNavigate } from '../hooks/useNavigate';
 
 interface QuickBuyTokensWidgetProps {
   onViewAll: () => void;
@@ -13,6 +14,11 @@ const QUICK_PACKAGES = [
 
 export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidgetProps) {
   const [hoveredPackage, setHoveredPackage] = useState<number | null>(null);
+  
+  const handleNavigate = () => {
+    window.location.hash = '#/enhanced-token-economy';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
 
   return (
     <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-2xl p-6 border border-[#202225] shadow-xl">
@@ -28,7 +34,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
           </div>
         </div>
           <button
-            onClick={() => window.location.hash = '#/enhanced-token-economy'}
+            onClick={handleNavigate}
             className="flex items-center gap-1 px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg font-semibold transition-colors"
           >
             <span>View All</span>
@@ -50,7 +56,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
                 ? 'border-green-500/50'
                 : 'border-[#202225]'
             }`}
-            onClick={() => window.location.hash = '#/enhanced-token-economy'}
+            onClick={handleNavigate}
           >
             {pkg.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
@@ -110,7 +116,7 @@ export default function QuickBuyTokensWidget({ onViewAll }: QuickBuyTokensWidget
             </div>
           </div>
           <button
-            onClick={() => window.location.hash = '#/enhanced-token-economy'}
+            onClick={handleNavigate}
             className="px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-500/20"
           >
             <Coins className="w-5 h-5" />
