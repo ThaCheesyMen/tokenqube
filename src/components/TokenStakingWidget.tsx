@@ -37,21 +37,32 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
     if (!profile) return;
 
     try {
-      const { data } = await supabase
+      console.log('Fetching staking data for user:', profile.id);
+      
+      const { data, error } = await supabase
         .from('token_staking')
         .select('*')
         .eq('user_id', profile.id)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .order('staked_at', { ascending: false });
 
+      if (error) {
+        console.error('Fetch error:', error);
+        throw error;
+      }
+
+      console.log('Stakes found:', data);
       setStakedTokens(data || []);
       
       const staked = data?.reduce((sum, s) => sum + s.amount, 0) || 0;
       const rewards = data?.reduce((sum, s) => sum + (s.accumulated_rewards || 0), 0) || 0;
       
+      console.log('Total staked:', staked, 'Total rewards:', rewards);
       setTotalStaked(staked);
       setTotalRewards(rewards);
     } catch (error) {
       console.error('Error fetching staking data:', error);
+      toast.error('Failed to load staking data');
     } finally {
       setLoading(false);
     }
@@ -113,23 +124,31 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
       setLoading(true);
 
       // Calculate unlock date
+      const now = new Date();
       const unlockDate = new Date();
       unlockDate.setDate(unlockDate.getDate() + selectedPlan.duration);
 
-      // Create staking record
-      const { error: stakeError } = await supabase
+      // Create staking record with all required fields
+      const { data: stakeData, error: stakeError } = await supabase
         .from('token_staking')
         .insert({
           user_id: profile.id,
           amount: amount,
-          staked_at: new Date().toISOString(),
+          staked_at: now.toISOString(),
           unlock_date: unlockDate.toISOString(),
-          reward_rate: selectedPlan.rate / 365, // Daily rate
+          reward_rate: selectedPlan.rate / 100, // Convert percentage to decimal
           accumulated_rewards: 0,
-          is_active: true,
-        });
+          is_active: true
+        })
+        .select()
+        .single();
 
-      if (stakeError) throw stakeError;
+      if (stakeError) {
+        console.error('Stake error:', stakeError);
+        throw stakeError;
+      }
+
+      console.log('Stake created:', stakeData);
 
       // Deduct tokens from balance
       const { error: balanceError } = await supabase
@@ -147,11 +166,13 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
         description: `Staked ${amount} tokens for ${selectedPlan.duration} days`,
       });
 
-      toast.success(`Successfully staked ${amount} tokens!`);
+      toast.success(`✅ Successfully staked ${amount} tokens for ${selectedPlan.duration} days!`);
       setShowStakeModal(false);
       setStakeAmount('');
       setSelectedPlan(null);
-      fetchStakingData();
+      
+      // Refresh data immediately
+      await fetchStakingData();
     } catch (error: any) {
       console.error('Staking error:', error);
       toast.error(error.message || 'Failed to stake tokens');
@@ -248,7 +269,7 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#202225]">
           <div className="flex items-center gap-2 mb-2">
             <Coins className="w-4 h-4 text-purple-400" />
@@ -259,9 +280,16 @@ export default function TokenStakingWidget({ onViewAll }: TokenStakingWidgetProp
         <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#202225]">
           <div className="flex items-center gap-2 mb-2">
             <Gift className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-gray-400">Rewards Earned</span>
+            <span className="text-xs text-gray-400">Pending Rewards</span>
           </div>
           <p className="text-2xl font-bold text-green-400">+{totalRewards.toLocaleString()}</p>
+        </div>
+        <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#202225]">
+          <div className="flex items-center gap-2 mb-2">
+            <Lock className="w-4 h-4 text-blue-400" />
+            <span className="text-xs text-gray-400">Active Positions</span>
+          </div>
+          <p className="text-2xl font-bold text-white">{stakedTokens.length}</p>
         </div>
       </div>
 
