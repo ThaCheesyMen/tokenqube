@@ -72,10 +72,6 @@ BEGIN
       COALESCE(
         (SELECT SUM(gross_revenue) FROM platform_revenue), 
         0
-      ) + 
-      COALESCE(
-        (SELECT SUM(usd_amount) FROM token_purchases WHERE status = 'completed'), 
-        0
       )
     )::NUMERIC,
     
@@ -177,52 +173,14 @@ BEGIN
     RAISE NOTICE '✓ Created platform_revenue table';
   END IF;
   
-  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'token_purchases') THEN
-    CREATE TABLE IF NOT EXISTS token_purchases (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-      user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-      package_id TEXT NOT NULL,
-      token_amount INTEGER NOT NULL,
-      usd_amount NUMERIC(10,2) NOT NULL,
-      crypto_currency TEXT NOT NULL,
-      crypto_amount NUMERIC(20,8) NOT NULL,
-      payment_address TEXT,
-      transaction_hash TEXT,
-      status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'expired')),
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      completed_at TIMESTAMPTZ
-    );
-    
-    ALTER TABLE token_purchases ENABLE ROW LEVEL SECURITY;
-    
-    CREATE POLICY "Users can view own purchases" ON token_purchases
-      FOR SELECT USING (auth.uid() = user_id);
-    
-    RAISE NOTICE '✓ Created token_purchases table';
-  END IF;
+  -- Note: token_purchases table doesn't exist in current schema
+  -- It's managed through token_transactions instead
   
-  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'token_withdrawals') THEN
-    CREATE TABLE IF NOT EXISTS token_withdrawals (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-      user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-      token_amount INTEGER NOT NULL,
-      usd_amount NUMERIC(10,2) NOT NULL,
-      crypto_currency TEXT NOT NULL,
-      crypto_amount NUMERIC(20,8) NOT NULL,
-      wallet_address TEXT NOT NULL,
-      transaction_hash TEXT,
-      status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'cancelled')),
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      processed_at TIMESTAMPTZ
-    );
-    
-    ALTER TABLE token_withdrawals ENABLE ROW LEVEL SECURITY;
-    
-    CREATE POLICY "Users can view own withdrawals" ON token_withdrawals
-      FOR SELECT USING (auth.uid() = user_id);
-    
-    RAISE NOTICE '✓ Created token_withdrawals table';
-  END IF;
+  -- Note: token_withdrawals table already exists from crypto_economy_system migration
+  -- Schema:
+  -- - amount_tokens, fee_tokens, net_amount_tokens, amount_usd
+  -- - crypto_address, crypto_type, status
+  -- Different from this migration's schema
 END $$;
 
 -- ===================
