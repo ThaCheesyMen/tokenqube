@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ShoppingCart, Coins, Sparkles, CreditCard, Bitcoin, ChevronRight } from 'lucide-react';
-import { useNavigate } from '../hooks/useNavigate';
 
 interface QuickBuyTokensWidgetProps {
   onViewAll: () => void;
