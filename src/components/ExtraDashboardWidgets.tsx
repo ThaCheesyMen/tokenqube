@@ -43,33 +43,38 @@ export function GamingWeatherWidget() {
     if (!profile) return;
 
     try {
-      // Get user's recent activity
-      const { data: recentActivity } = await supabase
+      // Get user's recent activity (last 7 days)
+      const { data: recentActivity, error } = await supabase
         .from('gaming_activity')
         .select('total_hours, achievements_earned')
         .eq('user_id', profile.id)
-        .gte('activity_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .single();
+        .gte('activity_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-      if (recentActivity) {
-        const hours = recentActivity.total_hours || 0;
-        const achievements = recentActivity.achievements_earned || 0;
+      if (error) {
+        console.error('Gaming weather query error:', error);
+        return;
+      }
 
-        if (hours > 20 && achievements > 5) {
+      if (recentActivity && recentActivity.length > 0) {
+        // Aggregate the data
+        const totalHours = recentActivity.reduce((sum, day) => sum + (parseFloat(day.total_hours?.toString() || '0')), 0);
+        const totalAchievements = recentActivity.reduce((sum, day) => sum + (day.achievements_earned || 0), 0);
+
+        if (totalHours > 20 && totalAchievements > 5) {
           setWeather({
             condition: 'electric',
             description: 'On fire! Keep dominating!',
             icon: <Zap className="w-12 h-12" />,
             color: 'from-purple-500 to-pink-500'
           });
-        } else if (hours > 10) {
+        } else if (totalHours > 10) {
           setWeather({
             condition: 'sunny',
             description: 'Great gaming streak!',
             icon: <Sun className="w-12 h-12" />,
             color: 'from-yellow-500 to-orange-500'
           });
-        } else if (hours > 5) {
+        } else if (totalHours > 5) {
           setWeather({
             condition: 'cloudy',
             description: 'Steady progress!',
